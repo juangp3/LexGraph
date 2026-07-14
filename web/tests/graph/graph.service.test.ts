@@ -204,4 +204,57 @@ describe('graphService', () => {
       expect.arrayContaining(['ancestor-id', 'better-id'])
     );
   });
+
+  it('fetches descendants flow with mode metadata for filter pipeline', async () => {
+    vi.spyOn(global, 'fetch').mockImplementation(async (input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.includes('/v1/graph/descendants/root-id')) {
+        return {
+          ok: true,
+          json: async () => ({
+            wordId: 'root-id',
+            depth: 3,
+            edges: [
+              {
+                edgeId: 'd1',
+                fromWordId: 'root-id',
+                toWordId: 'child-id',
+                relationType: 'EVOLVED_FROM',
+                confidence: 0.8,
+                method: 'manual',
+                isDisputed: false,
+                evidenceSummary: null,
+                depth: 1,
+                path: ['root-id', 'child-id'],
+                sources: [],
+              },
+            ],
+          }),
+        } as Response;
+      }
+
+      if (url.includes('/v1/words/root-id')) {
+        return {
+          ok: true,
+          json: async () => ({ wordId: 'root-id', textOriginal: 'root', language: 'English' }),
+        } as Response;
+      }
+
+      if (url.includes('/v1/words/child-id')) {
+        return {
+          ok: true,
+          json: async () => ({ wordId: 'child-id', textOriginal: 'child', language: 'English' }),
+        } as Response;
+      }
+
+      return { ok: false, status: 404 } as Response;
+    });
+
+    const result = await graphService.fetchTraversalFlow('descendants', 'root-id', 3);
+
+    expect(result.nodes).toHaveLength(2);
+    expect(result.edges).toHaveLength(1);
+    expect(result.edges[0].data).toMatchObject({ mode: 'descendants' });
+  });
 });

@@ -6,6 +6,13 @@ import {
   GraphWordDetailsResponse,
 } from '@/types/graph';
 
+export type GraphMode = 'ancestors' | 'descendants' | 'borrowings' | 'cognates';
+
+export interface FlowGraph {
+  nodes: Node[];
+  edges: Edge[];
+}
+
 interface SearchResult {
   wordId: string;
   textOriginal: string;
@@ -79,8 +86,9 @@ function applyDagreLayout(nodes: Node[], edges: Edge[]): Node[] {
 function buildFlowGraph(
   rootWordId: string,
   edges: GraphTraversalEdge[],
-  labelsById: Map<string, string>
-): { nodes: Node[]; edges: Edge[] } {
+  labelsById: Map<string, string>,
+  mode: GraphMode
+): FlowGraph {
   const nodeIds = collectWordIds(rootWordId, edges);
 
   const nodes: Node[] = nodeIds.map((id) => ({
@@ -103,6 +111,7 @@ function buildFlowGraph(
     source: edge.fromWordId,
     target: edge.toWordId,
     label: edge.relationType,
+    data: { relationType: edge.relationType, mode },
     animated: false,
     style: {
       opacity: Math.max(0.35, Math.min(1, edge.confidence ?? 0.7)),
@@ -116,6 +125,30 @@ function buildFlowGraph(
   };
 }
 
+export function mergeFlowGraphs(graphs: Array<FlowGraph | null | undefined>): FlowGraph {
+  const nodesById = new Map<string, Node>();
+  const edgesById = new Map<string, Edge>();
+
+  for (const graph of graphs) {
+    if (!graph) continue;
+    for (const node of graph.nodes) {
+      if (!nodesById.has(node.id)) {
+        nodesById.set(node.id, node);
+      }
+    }
+    for (const edge of graph.edges) {
+      if (!edgesById.has(edge.id)) {
+        edgesById.set(edge.id, edge);
+      }
+    }
+  }
+
+  return {
+    nodes: applyDagreLayout([...nodesById.values()], [...edgesById.values()]),
+    edges: [...edgesById.values()],
+  };
+}
+
 class GraphService {
   private async searchWordCandidates(word: string): Promise<SearchResult[]> {
     const response = await fetchJson<SearchResponse>(
@@ -124,19 +157,54 @@ class GraphService {
     return response.results ?? [];
   }
 
-  async fetchAncestors(rootWordId: string, depth = 6): Promise<GraphTraversalResponse> {
+  async fetchTraversal(
+    mode: GraphMode,
+    rootWordId: string,
+    depth = 6
+  ): Promise<GraphTraversalResponse> {
     return fetchJson<GraphTraversalResponse>(
-      `${API_BASE}/v1/graph/ancestors/${encodeURIComponent(rootWordId)}?depth=${depth}`
+      `${API_BASE}/v1/graph/${mode}/${encodeURIComponent(rootWordId)}?depth=${depth}`
     );
+  }
+
+  async fetchAncestors(rootWordId: string, depth = 6): Promise<GraphTraversalResponse> {
+    return this.fetchTraversal('ancestors', rootWordId, depth);
+  }
+
+  async fetchDescendants(rootWordId: string, depth = 4): Promise<GraphTraversalResponse> {
+    return this.fetchTraversal('descendants', rootWordId, depth);
+  }
+
+  async fetchBorrowings(rootWordId: string, depth = 4): Promise<GraphTraversalResponse> {
+    return this.fetchTraversal('borrowings', rootWordId, depth);
+  }
+
+  async fetchCognates(rootWordId: string, depth = 3): Promise<GraphTraversalResponse> {
+    return this.fetchTraversal('cognates', rootWordId, depth);
+  }
+
+  async fetchTraversalFlow(
+    mode: GraphMode,
+    rootWordId: string,
+    depth = 6
+  ): Promise<FlowGraph> {
+    const response = await this.fetchTraversal(mode, rootWordId, depth);
+    const wordIds = collectWordIds(rootWordId, response.edges);
+
+    const labels = await Promise.all(
+      wordIds.map(async (id) => [id, await fetchWordLabel(id)] as const)
+    );
+
+    return buildFlowGraph(rootWordId, response.edges, new Map(labels), mode);
   }
 
   async fetchAncestorsFlow(
     rootWordId: string,
     depth = 6,
     fallbackWord?: string | null
-  ): Promise<{ nodes: Node[]; edges: Edge[] }> {
+  ): Promise<FlowGraph> {
     let resolvedRootWordId = rootWordId;
-    let response = await this.fetchAncestors(resolvedRootWordId, depth);
+    let response = await this.fetchTraversal('ancestors', resolvedRootWordId, depth);
 
     if ((response.edges?.length ?? 0) === 0 && fallbackWord) {
       const candidates = await this.searchWordCandidates(fallbackWord);
@@ -145,7 +213,7 @@ class GraphService {
           continue;
         }
 
-        const candidateResponse = await this.fetchAncestors(candidate.wordId, depth);
+        const candidateResponse = await this.fetchTraversal('ancestors', candidate.wordId, depth);
         if ((candidateResponse.edges?.length ?? 0) > 0) {
           resolvedRootWordId = candidate.wordId;
           response = candidateResponse;
@@ -160,7 +228,7 @@ class GraphService {
       wordIds.map(async (id) => [id, await fetchWordLabel(id)] as const)
     );
 
-    return buildFlowGraph(resolvedRootWordId, response.edges, new Map(labels));
+    return buildFlowGraph(resolvedRootWordId, response.edges, new Map(labels), 'ancestors');
   }
 }
 
