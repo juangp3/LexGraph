@@ -40,11 +40,11 @@ describe('useGraph', () => {
       edges: [],
     });
 
-    const { result } = renderHook(() => useGraph('root-id', 4), { wrapper });
+    const { result } = renderHook(() => useGraph('root-id', 4, 'father'), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(graphService.fetchAncestorsFlow).toHaveBeenCalledWith('root-id', 4);
+    expect(graphService.fetchAncestorsFlow).toHaveBeenCalledWith('root-id', 4, 'father');
     expect(result.current.data?.nodes[0].data.label).toBe('father');
   });
 });

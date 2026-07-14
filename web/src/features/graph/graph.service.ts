@@ -6,6 +6,16 @@ import {
   GraphWordDetailsResponse,
 } from '@/types/graph';
 
+interface SearchResult {
+  wordId: string;
+  textOriginal: string;
+  language: string;
+}
+
+interface SearchResponse {
+  results: SearchResult[];
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
 
 const NODE_WIDTH = 220;
@@ -107,21 +117,50 @@ function buildFlowGraph(
 }
 
 class GraphService {
+  private async searchWordCandidates(word: string): Promise<SearchResult[]> {
+    const response = await fetchJson<SearchResponse>(
+      `${API_BASE}/v1/search?q=${encodeURIComponent(word)}&limit=10`
+    );
+    return response.results ?? [];
+  }
+
   async fetchAncestors(rootWordId: string, depth = 6): Promise<GraphTraversalResponse> {
     return fetchJson<GraphTraversalResponse>(
       `${API_BASE}/v1/graph/ancestors/${encodeURIComponent(rootWordId)}?depth=${depth}`
     );
   }
 
-  async fetchAncestorsFlow(rootWordId: string, depth = 6): Promise<{ nodes: Node[]; edges: Edge[] }> {
-    const response = await this.fetchAncestors(rootWordId, depth);
-    const wordIds = collectWordIds(rootWordId, response.edges);
+  async fetchAncestorsFlow(
+    rootWordId: string,
+    depth = 6,
+    fallbackWord?: string | null
+  ): Promise<{ nodes: Node[]; edges: Edge[] }> {
+    let resolvedRootWordId = rootWordId;
+    let response = await this.fetchAncestors(resolvedRootWordId, depth);
+
+    if ((response.edges?.length ?? 0) === 0 && fallbackWord) {
+      const candidates = await this.searchWordCandidates(fallbackWord);
+      for (const candidate of candidates) {
+        if (candidate.wordId === resolvedRootWordId) {
+          continue;
+        }
+
+        const candidateResponse = await this.fetchAncestors(candidate.wordId, depth);
+        if ((candidateResponse.edges?.length ?? 0) > 0) {
+          resolvedRootWordId = candidate.wordId;
+          response = candidateResponse;
+          break;
+        }
+      }
+    }
+
+    const wordIds = collectWordIds(resolvedRootWordId, response.edges);
 
     const labels = await Promise.all(
       wordIds.map(async (id) => [id, await fetchWordLabel(id)] as const)
     );
 
-    return buildFlowGraph(rootWordId, response.edges, new Map(labels));
+    return buildFlowGraph(resolvedRootWordId, response.edges, new Map(labels));
   }
 }
 

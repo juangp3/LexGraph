@@ -26,6 +26,7 @@ function Workspace() {
 
       <GraphCanvas
         rootWordId={selectedNodeId}
+        rootWordText={initialWord}
         selectedNodeId={selectedNodeId}
         onSelectNode={(nodeId, label) => {
           setSelectedNodeId(nodeId);

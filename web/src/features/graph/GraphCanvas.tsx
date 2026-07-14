@@ -16,12 +16,13 @@ import { useGraph } from './useGraph';
 
 interface GraphCanvasProps {
   rootWordId: string | null;
+  rootWordText?: string | null;
   selectedNodeId: string | null;
   onSelectNode: (nodeId: string, label: string) => void;
 }
 
-function GraphCanvasInner({ rootWordId, selectedNodeId, onSelectNode }: GraphCanvasProps) {
-  const { data, isLoading, isError } = useGraph(rootWordId, 6);
+function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNode }: GraphCanvasProps) {
+  const { data, isLoading, isError } = useGraph(rootWordId, 6, rootWordText);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const reactFlow = useReactFlow();
