@@ -77,3 +77,32 @@ export interface SearchRepository {
   searchCandidates(query: string, languageFilter?: string, limit?: number): Promise<SearchCandidate[]>;
   rankCandidates(candidates: SearchCandidate[], query: string): Promise<SearchCandidate[]>;
 }
+
+export interface WordDetailMeaning {
+  gloss: string;
+  domain: string | null;
+  usageNote: string | null;
+}
+
+export interface WordDetailSource {
+  sourceId: string;
+  title: string;
+  author: string | null;
+  year: number | null;
+  sourceLocator: string | null;
+  confidence: number;
+}
+
+export interface WordDetails {
+  wordId: string;
+  textOriginal: string;
+  textNormalized: string;
+  language: string;
+  stage: string | null;
+  meanings: WordDetailMeaning[];
+  sources: WordDetailSource[];
+}
+
+export interface WordDetailsRepository {
+  getWordDetails(wordId: string): Promise<WordDetails | null>;
+}

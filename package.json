@@ -23,8 +23,12 @@
     "test:functional": "vitest run tests/functional",
     "test:integration": "vitest run tests/integration",
     "test:system": "vitest run tests/system",
+    "test:performance:search": "k6 run tests/performance/search-smoke.js",
+    "test:performance:traversal": "k6 run tests/performance/traversal-smoke.js",
+    "test:performance": "npm run test:performance:search && npm run test:performance:traversal",
     "test:fast": "npm run test:unit && npm run test:component && npm run test:functional",
-    "test:all": "npm run test:fast && npm run test:integration && npm run test:system"
+    "test:all": "npm run test:fast && npm run test:integration && npm run test:system",
+    "integrity:check": "tsx scripts/check-integrity.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",

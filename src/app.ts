@@ -1,7 +1,12 @@
 import express from "express";
 import { PgGraphRepository } from "./repositories/pg-graph.repository.js";
 import { PgSearchRepository } from "./repositories/pg-search.repository.js";
-import type { GraphRepository, SearchRepository } from "./repositories/interfaces.js";
+import { PgWordDetailsRepository } from "./repositories/pg-word-details.repository.js";
+import type {
+  GraphRepository,
+  SearchRepository,
+  WordDetailsRepository
+} from "./repositories/interfaces.js";
 
 const UUID_V4_OR_V1_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -31,12 +36,14 @@ function validateGraphRequest(wordId: string, rawDepth: unknown) {
 interface AppDependencies {
   graphRepository?: GraphRepository;
   searchRepository?: SearchRepository;
+  wordDetailsRepository?: WordDetailsRepository;
 }
 
 export function createApp(dependencies: AppDependencies = {}) {
   const app = express();
   const graphRepository = dependencies.graphRepository ?? new PgGraphRepository();
   const searchRepository = dependencies.searchRepository ?? new PgSearchRepository();
+  const wordDetailsRepository = dependencies.wordDetailsRepository ?? new PgWordDetailsRepository();
 
   app.use(express.json());
 
@@ -65,6 +72,24 @@ export function createApp(dependencies: AppDependencies = {}) {
       });
     } catch (error) {
       return res.status(500).json({ message: "Failed to run search", error: String(error) });
+    }
+  });
+
+  app.get("/v1/words/:wordId", async (req, res) => {
+    const { wordId } = req.params;
+    if (!UUID_V4_OR_V1_REGEX.test(wordId)) {
+      return res.status(400).json({ message: "Invalid wordId. Expected UUID." });
+    }
+
+    try {
+      const details = await wordDetailsRepository.getWordDetails(wordId);
+      if (!details) {
+        return res.status(404).json({ message: "Word not found" });
+      }
+
+      return res.status(200).json(details);
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to load word details", error: String(error) });
     }
   });
 

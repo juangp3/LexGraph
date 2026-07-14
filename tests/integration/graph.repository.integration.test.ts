@@ -94,7 +94,12 @@ describe("integration: graph repository", () => {
       toWordId: rootWordId,
       relationType: "COGNATE_WITH",
       confidence: 0.4,
-      method: "inferred"
+      method: "inferred",
+      sources: [{
+        sourceId,
+        sourceLocator: "entry-3",
+        quoteExcerpt: "cognate linkage fixture"
+      }]
     });
   });
 
@@ -102,6 +107,13 @@ describe("integration: graph repository", () => {
     if (!shouldRun || !client) {
       return;
     }
+
+    await client.query(
+      `
+      DELETE FROM languages
+      WHERE stage_label LIKE 'Week3-%'
+      `
+    );
 
     await client.end();
   });

@@ -49,5 +49,10 @@ jobs:
           DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
         run: npm run test:integration
 
+      - name: Data integrity checks
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+        run: npm run integrity:check
+
       - name: System smoke tests
         run: npm run test:system
