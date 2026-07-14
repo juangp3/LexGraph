@@ -7,6 +7,8 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed:week2": "tsx scripts/seed-week2.ts",
     "infra:doctor": "docker context ls && docker context show && docker --context default version",
     "infra:up": "docker compose up -d postgres apache-age redis",
     "infra:down": "docker compose down",
@@ -25,11 +27,13 @@
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.11",
     "@types/supertest": "^6.0.3",
     "prisma": "^6.11.1",
     "supertest": "^7.0.0",

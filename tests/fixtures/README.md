@@ -7,3 +7,7 @@ This directory stores deterministic fixture payloads for:
 - source attribution
 
 Week 1 only adds structure. Week 2 will add the first concrete fixture bundle.
+
+Current bundle:
+
+- week2-lineage.json

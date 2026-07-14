@@ -1,0 +1,51 @@
+{
+  "name": "week2-father-lineage-seed",
+  "description": "Deterministic relational fixture for lineage-oriented records used in Week 2",
+  "languageFamily": {
+    "name": "Indo-European",
+    "slug": "indo-european"
+  },
+  "languages": [
+    {
+      "name": "English",
+      "iso639_3": "eng",
+      "stage_label": "Modern English"
+    },
+    {
+      "name": "English",
+      "iso639_3": "ang",
+      "stage_label": "Old English"
+    },
+    {
+      "name": "Proto-Germanic",
+      "iso639_3": null,
+      "stage_label": "Proto"
+    }
+  ],
+  "words": [
+    {
+      "text_original": "father",
+      "text_normalized": "father",
+      "text_ascii_folded": "father",
+      "language": "Modern English"
+    },
+    {
+      "text_original": "faeder",
+      "text_normalized": "faeder",
+      "text_ascii_folded": "faeder",
+      "language": "Old English"
+    },
+    {
+      "text_original": "*fader",
+      "text_normalized": "*fader",
+      "text_ascii_folded": "*fader",
+      "language": "Proto"
+    }
+  ],
+  "source": {
+    "title": "Week 2 Fixture Source",
+    "author": "LexGraph Team",
+    "year": 2026,
+    "url": "https://example.org/lexgraph-week2-fixture"
+  }
+}

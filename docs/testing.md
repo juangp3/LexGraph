@@ -19,6 +19,11 @@
 
 If Docker shows a named-pipe error on Windows, run `docker context use default` and retry.
 
+## Week 2 Database Commands
+
+- `npm run db:migrate`
+- `npm run db:seed:week2`
+
 ## Scope By Suite
 
 - Unit: pure domain logic
@@ -31,13 +36,18 @@ If Docker shows a named-pipe error on Windows, run `docker context use default` 
 ## Human-In-The-Loop Validation (Current)
 
 1. Run `npm install`.
-2. Run `npm run test:fast`.
-3. Start services: `docker compose up -d postgres apache-age redis`.
-4. Run app: `npm run dev`.
-5. Validate endpoints:
+2. Start services: `npm run infra:up`.
+3. Apply schema: `npm run db:migrate`.
+4. Seed deterministic fixture: `npm run db:seed:week2`.
+5. Run `npm run test:fast`.
+6. Run integration tests:
+   - PowerShell: `$env:RUN_INTEGRATION='true'; npm run test:integration; Remove-Item Env:RUN_INTEGRATION`
+   - Bash: `RUN_INTEGRATION=true npm run test:integration`
+7. Run app: `npm run dev`.
+8. Validate endpoints:
    - `GET /health`
    - `GET /v1/search?q=father`
-6. Optionally run `npm run test:system`.
+9. Run `npm run test:system`.
 
 ## CI Behavior
 

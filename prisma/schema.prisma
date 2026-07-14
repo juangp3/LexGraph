@@ -7,7 +7,106 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Placeholder {
+model LanguageFamily {
+  id             String         @id @default(uuid()) @db.Uuid
+  name           String
+  slug           String         @unique
+  parentFamilyId String?        @map("parent_family_id") @db.Uuid
+  parentFamily   LanguageFamily? @relation("FamilyHierarchy", fields: [parentFamilyId], references: [id], onDelete: SetNull)
+  childFamilies  LanguageFamily[] @relation("FamilyHierarchy")
+  languages      Language[]
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([parentFamilyId])
+  @@map("language_families")
+}
+
+model Language {
+  id          String          @id @default(uuid()) @db.Uuid
+  familyId    String?         @map("family_id") @db.Uuid
+  family      LanguageFamily? @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  name        String
+  iso6393     String?         @map("iso639_3")
+  stageLabel  String?         @map("stage_label")
+  periodStart Int?            @map("period_start")
+  periodEnd   Int?            @map("period_end")
+  words       Word[]
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([name, stageLabel], map: "uq_languages_name_stage_label")
+  @@index([familyId])
+  @@index([iso6393])
+  @@map("languages")
+}
+
+model Source {
+  id          String       @id @default(uuid()) @db.Uuid
+  title       String
+  author      String?
+  year        Int?
+  url         String?
+  license     String?
+  citation    String?
+  wordSources WordSource[]
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([year])
+  @@map("sources")
+}
+
+model Word {
+  id                   String       @id @default(uuid()) @db.Uuid
+  languageId           String       @map("language_id") @db.Uuid
+  language             Language     @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  textOriginal         String       @map("text_original")
+  textNormalized       String       @map("text_normalized")
+  textAsciiFolded      String       @map("text_ascii_folded")
+  lemma                String?
+  ipa                  String?
+  isReconstructed      Boolean      @default(false) @map("is_reconstructed")
+  reconstructionMarker String?      @map("reconstruction_marker")
+  periodLabel          String?      @map("period_label")
+  notes                String?
+  meanings             Meaning[]
+  wordSources          WordSource[]
+  createdAt            DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([languageId])
+  @@index([isReconstructed])
+  @@unique([languageId, textNormalized, lemma], map: "uq_words_prisma_compat")
+  @@map("words")
+}
+
+model Meaning {
   id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  wordId    String   @map("word_id") @db.Uuid
+  word      Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  gloss     String
+  domain    String?
+  usageNote String?  @map("usage_note")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([wordId])
+  @@map("meanings")
+}
+
+model WordSource {
+  id           String   @id @default(uuid()) @db.Uuid
+  wordId       String   @map("word_id") @db.Uuid
+  sourceId     String   @map("source_id") @db.Uuid
+  word         Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  source       Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceLocator String? @map("source_locator")
+  extractedBy  String?  @map("extracted_by")
+  confidence   Decimal  @default(1.00) @db.Decimal(3, 2)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([sourceId])
+  @@unique([wordId, sourceId, sourceLocator], map: "uq_word_sources_prisma_compat")
+  @@map("word_sources")
 }

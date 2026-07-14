@@ -33,6 +33,20 @@ jobs:
   integration-tests:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: lexgraph
+          POSTGRES_USER: lexgraph
+          POSTGRES_PASSWORD: lexgraph
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lexgraph -d lexgraph"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,9 +60,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Apply migrations
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+        run: npm run db:migrate
+
       - name: Integration tests
         env:
           RUN_INTEGRATION: "true"
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
         run: npm run test:integration
 
   system-smoke:
