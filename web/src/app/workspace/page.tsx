@@ -10,11 +10,13 @@ function Workspace() {
   const initialWord = searchParams.get("word") ?? searchParams.get("wordId");
   const initialWordId = searchParams.get("wordId");
 
-  const [selectedWord, setSelectedWord] = useState<string | null>(initialWord);
+  const [selectedWord, setSelectedWord] = useState<string | null>(
+    initialWordId ?? initialWord
+  );
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialWordId);
 
   useEffect(() => {
-    setSelectedWord(initialWord);
+    setSelectedWord(initialWordId ?? initialWord);
     setSelectedNodeId(initialWordId);
   }, [initialWord, initialWordId]);
 
@@ -27,7 +29,7 @@ function Workspace() {
         selectedNodeId={selectedNodeId}
         onSelectNode={(nodeId, label) => {
           setSelectedNodeId(nodeId);
-          setSelectedWord(label);
+          setSelectedWord(nodeId);
         }}
       />
 

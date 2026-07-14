@@ -1,5 +1,21 @@
 import { http, HttpResponse } from 'msw';
 
+const WORD_IDS = {
+  father: 'd694f27c-633c-44a9-a881-130b223b1120',
+  mother: 'fca87886-e8f8-47e2-9baa-329c2f79ff47',
+  pieFather: '6f49fc8d-c95e-425b-8bde-4f9682a41acd',
+  pgFather: '37e7f503-a5ca-43e7-ba7b-09a458c1de95',
+  oeFather: 'f1a49ab9-fbbe-4d16-b693-3af0a4a17e00',
+} as const;
+
+const wordDetailsById: Record<string, { textOriginal: string; language: string; stage?: string }> = {
+  [WORD_IDS.father]: { textOriginal: 'father', language: 'English', stage: 'Modern English' },
+  [WORD_IDS.mother]: { textOriginal: 'mother', language: 'English', stage: 'Modern English' },
+  [WORD_IDS.pieFather]: { textOriginal: '*ph2ter', language: 'Proto-Indo-European', stage: 'Proto' },
+  [WORD_IDS.pgFather]: { textOriginal: '*fader', language: 'Proto-Germanic', stage: 'Proto' },
+  [WORD_IDS.oeFather]: { textOriginal: 'faeder', language: 'Old English', stage: 'Old English' },
+};
+
 export const handlers = [
   http.get('http://localhost:3001/v1/search', ({ request }) => {
     const url = new URL(request.url);
@@ -9,7 +25,7 @@ export const handlers = [
     if (query === 'father') {
       results = [
         {
-          wordId: 'father',
+          wordId: WORD_IDS.father,
           textOriginal: 'father',
           language: 'English',
         },
@@ -17,7 +33,7 @@ export const handlers = [
     } else if (query === 'mother') {
       results = [
         {
-          wordId: 'mother',
+          wordId: WORD_IDS.mother,
           textOriginal: 'mother',
           language: 'English',
         },
@@ -25,5 +41,79 @@ export const handlers = [
     }
 
     return HttpResponse.json({ results });
+  }),
+
+  http.get('http://localhost:3001/v1/graph/ancestors/:wordId', ({ params, request }) => {
+    const wordId = String(params.wordId);
+    const depth = Number(new URL(request.url).searchParams.get('depth') ?? '6');
+
+    if (wordId !== WORD_IDS.father) {
+      return HttpResponse.json({ wordId, depth, edges: [] });
+    }
+
+    return HttpResponse.json({
+      wordId,
+      depth,
+      edges: [
+        {
+          edgeId: 'edge-pie-pg',
+          fromWordId: WORD_IDS.pieFather,
+          toWordId: WORD_IDS.pgFather,
+          relationType: 'EVOLVED_FROM',
+          confidence: 0.92,
+          method: 'manual',
+          isDisputed: false,
+          evidenceSummary: 'Mock PIE to Proto-Germanic lineage',
+          depth: 2,
+          path: [WORD_IDS.pieFather, WORD_IDS.pgFather],
+          sources: [],
+        },
+        {
+          edgeId: 'edge-pg-oe',
+          fromWordId: WORD_IDS.pgFather,
+          toWordId: WORD_IDS.oeFather,
+          relationType: 'EVOLVED_FROM',
+          confidence: 0.95,
+          method: 'manual',
+          isDisputed: false,
+          evidenceSummary: 'Mock Proto-Germanic to Old English',
+          depth: 1,
+          path: [WORD_IDS.pgFather, WORD_IDS.oeFather],
+          sources: [],
+        },
+        {
+          edgeId: 'edge-oe-en',
+          fromWordId: WORD_IDS.oeFather,
+          toWordId: WORD_IDS.father,
+          relationType: 'EVOLVED_FROM',
+          confidence: 0.97,
+          method: 'manual',
+          isDisputed: false,
+          evidenceSummary: 'Mock Old English to Modern English',
+          depth: 0,
+          path: [WORD_IDS.oeFather, WORD_IDS.father],
+          sources: [],
+        },
+      ],
+    });
+  }),
+
+  http.get('http://localhost:3001/v1/words/:wordId', ({ params }) => {
+    const wordId = String(params.wordId);
+    const details = wordDetailsById[wordId];
+
+    if (!details) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    return HttpResponse.json({
+      wordId,
+      textOriginal: details.textOriginal,
+      textNormalized: details.textOriginal.toLowerCase(),
+      language: details.language,
+      stage: details.stage ?? null,
+      meanings: [{ gloss: `Mock meaning for ${details.textOriginal}` }],
+      sources: [{ title: 'Mock Source', sourceLocator: 'msw:1' }],
+    });
   }),
 ];
