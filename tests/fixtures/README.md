@@ -11,3 +11,4 @@ Week 1 only adds structure. Week 2 will add the first concrete fixture bundle.
 Current bundle:
 
 - week2-lineage.json
+- week4-import-dataset.json

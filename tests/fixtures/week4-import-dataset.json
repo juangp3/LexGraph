@@ -1,0 +1,84 @@
+{
+  "records": [
+    {
+      "family": "Indo-European",
+      "language": "English",
+      "stage": "Modern English",
+      "word": "father",
+      "meaning": "male parent",
+      "sourceTitle": "Week4 Fixture Import Source",
+      "sourceAuthor": "LexGraph",
+      "sourceYear": 2026,
+      "sourceUrl": "https://example.org/week4",
+      "sourceLocator": "r1",
+      "relationType": "EVOLVED_FROM",
+      "relatedWord": "faeder",
+      "relatedLanguage": "English",
+      "relatedStage": "Old English"
+    },
+    {
+      "family": "Indo-European",
+      "language": "English",
+      "stage": "Old English",
+      "word": "faeder",
+      "meaning": "male parent",
+      "sourceTitle": "Week4 Fixture Import Source",
+      "sourceAuthor": "LexGraph",
+      "sourceYear": 2026,
+      "sourceUrl": "https://example.org/week4",
+      "sourceLocator": "r2",
+      "relationType": "EVOLVED_FROM",
+      "relatedWord": "*fader",
+      "relatedLanguage": "Proto-Germanic",
+      "relatedStage": "Proto"
+    },
+    {
+      "family": "Indo-European",
+      "language": "Proto-Germanic",
+      "stage": "Proto",
+      "word": "*fader",
+      "meaning": "male parent",
+      "sourceTitle": "Week4 Fixture Import Source",
+      "sourceAuthor": "LexGraph",
+      "sourceYear": 2026,
+      "sourceUrl": "https://example.org/week4",
+      "sourceLocator": "r3"
+    },
+    {
+      "family": "Indo-European",
+      "language": "English",
+      "stage": "Modern English",
+      "word": "father",
+      "meaning": "male parent",
+      "sourceTitle": "Week4 Fixture Import Source",
+      "sourceAuthor": "LexGraph",
+      "sourceYear": 2026,
+      "sourceUrl": "https://example.org/week4",
+      "sourceLocator": "r1",
+      "relationType": "EVOLVED_FROM",
+      "relatedWord": "faeder",
+      "relatedLanguage": "English",
+      "relatedStage": "Old English"
+    },
+    {
+      "family": "Indo-European",
+      "language": "English",
+      "stage": "Modern English",
+      "word": "",
+      "meaning": "bad record",
+      "sourceTitle": "Week4 Fixture Import Source"
+    },
+    {
+      "family": "Indo-European",
+      "language": "English",
+      "stage": "Modern English",
+      "word": "fader",
+      "meaning": "variant",
+      "sourceTitle": "Week4 Fixture Import Source",
+      "relationType": "MADE_UP_RELATION",
+      "relatedWord": "father",
+      "relatedLanguage": "English",
+      "relatedStage": "Modern English"
+    }
+  ]
+}

@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "db:migrate": "prisma migrate deploy",
     "db:seed:week2": "tsx scripts/seed-week2.ts",
+    "import:week4": "tsx scripts/import-week4.ts",
     "infra:doctor": "docker context ls && docker context show && docker --context default version",
     "infra:up": "docker compose up -d postgres apache-age redis",
     "infra:down": "docker compose down",

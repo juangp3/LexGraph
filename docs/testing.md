@@ -24,6 +24,10 @@ If Docker shows a named-pipe error on Windows, run `docker context use default` 
 - `npm run db:migrate`
 - `npm run db:seed:week2`
 
+## Week 4 Import Commands
+
+- `npm run import:week4`
+
 ## Scope By Suite
 
 - Unit: pure domain logic
@@ -40,16 +44,17 @@ If Docker shows a named-pipe error on Windows, run `docker context use default` 
 3. Apply schema: `npm run db:migrate`.
 4. Seed deterministic fixture: `npm run db:seed:week2`.
 5. Run `npm run test:fast`.
-6. Run integration tests:
+6. Run `npm run import:week4`.
+7. Run integration tests:
    - PowerShell: `$env:RUN_INTEGRATION='true'; npm run test:integration; Remove-Item Env:RUN_INTEGRATION`
    - Bash: `RUN_INTEGRATION=true npm run test:integration`
-7. Run app: `npm run dev`.
-8. Validate endpoints:
+8. Run app: `npm run dev`.
+9. Validate endpoints:
    - `GET /health`
    - `GET /v1/search?q=father`
    - `GET /v1/graph/ancestors/{wordId}?depth=4`
    - `GET /v1/graph/descendants/{wordId}?depth=4`
-9. Run `npm run test:system`.
+10. Run `npm run test:system`.
 
 ## CI Behavior
 
