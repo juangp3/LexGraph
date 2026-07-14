@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { PgGraphRepository } from "./repositories/pg-graph.repository.js";
 import { PgSearchRepository } from "./repositories/pg-search.repository.js";
 import { PgWordDetailsRepository } from "./repositories/pg-word-details.repository.js";
@@ -45,6 +46,9 @@ export function createApp(dependencies: AppDependencies = {}) {
   const searchRepository = dependencies.searchRepository ?? new PgSearchRepository();
   const wordDetailsRepository = dependencies.wordDetailsRepository ?? new PgWordDetailsRepository();
 
+  app.use(cors({
+    origin: "http://localhost:3000"
+  }));
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
