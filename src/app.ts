@@ -1,5 +1,7 @@
 import express from "express";
 import { PgGraphRepository } from "./repositories/pg-graph.repository.js";
+import { PgSearchRepository } from "./repositories/pg-search.repository.js";
+import type { GraphRepository, SearchRepository } from "./repositories/interfaces.js";
 
 const UUID_V4_OR_V1_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -26,9 +28,15 @@ function validateGraphRequest(wordId: string, rawDepth: unknown) {
   return { ok: true as const, depth };
 }
 
-export function createApp() {
+interface AppDependencies {
+  graphRepository?: GraphRepository;
+  searchRepository?: SearchRepository;
+}
+
+export function createApp(dependencies: AppDependencies = {}) {
   const app = express();
-  const graphRepository = new PgGraphRepository();
+  const graphRepository = dependencies.graphRepository ?? new PgGraphRepository();
+  const searchRepository = dependencies.searchRepository ?? new PgSearchRepository();
 
   app.use(express.json());
 
@@ -36,13 +44,28 @@ export function createApp() {
     res.status(200).json({ ok: true, service: "lexgraph-api" });
   });
 
-  app.get("/v1/search", (req, res) => {
+  app.get("/v1/search", async (req, res) => {
     const q = String(req.query.q ?? "").trim();
-    res.status(200).json({
-      query: q,
-      results: [],
-      message: "Search endpoint scaffolded in Week 1"
-    });
+    const language = typeof req.query.language === "string" ? req.query.language : undefined;
+    const limit = Number(req.query.limit ?? 10);
+
+    if (!q) {
+      return res.status(400).json({ message: "Query q is required" });
+    }
+
+    try {
+      const candidates = await searchRepository.searchCandidates(q, language, limit);
+      const ranked = await searchRepository.rankCandidates(candidates, q);
+
+      return res.status(200).json({
+        query: q,
+        language: language ?? null,
+        total: ranked.length,
+        results: ranked
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to run search", error: String(error) });
+    }
   });
 
   app.get("/v1/graph/ancestors/:wordId", async (req, res) => {

@@ -66,6 +66,10 @@ export interface GraphRepository {
 
 export interface SearchCandidate {
   wordId: string;
+  textOriginal: string;
+  textNormalized: string;
+  language: string;
+  stage: string | null;
   score: number;
 }
 
