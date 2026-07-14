@@ -50,6 +50,7 @@ model Source {
   license     String?
   citation    String?
   wordSources WordSource[]
+  edgeSources EdgeSource[]
   createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
 
@@ -72,6 +73,8 @@ model Word {
   notes                String?
   meanings             Meaning[]
   wordSources          WordSource[]
+  outgoingEdges        EtymologyEdge[] @relation("OutgoingWordEdges")
+  incomingEdges        EtymologyEdge[] @relation("IncomingWordEdges")
   createdAt            DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
 
@@ -109,4 +112,42 @@ model WordSource {
   @@index([sourceId])
   @@unique([wordId, sourceId, sourceLocator], map: "uq_word_sources_prisma_compat")
   @@map("word_sources")
+}
+
+model EtymologyEdge {
+  id              String      @id @default(uuid()) @db.Uuid
+  fromWordId      String      @map("from_word_id") @db.Uuid
+  toWordId        String      @map("to_word_id") @db.Uuid
+  relationType    String      @map("relation_type")
+  confidence      Decimal     @db.Decimal(3, 2)
+  evidenceSummary String?     @map("evidence_summary")
+  method          String
+  isDisputed      Boolean     @default(false) @map("is_disputed")
+  createdBy       String?     @map("created_by")
+  fromWord        Word        @relation("OutgoingWordEdges", fields: [fromWordId], references: [id], onDelete: Cascade)
+  toWord          Word        @relation("IncomingWordEdges", fields: [toWordId], references: [id], onDelete: Cascade)
+  edgeSources     EdgeSource[]
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([fromWordId, toWordId, relationType], map: "uq_etymology_edges_from_to_type")
+  @@index([toWordId, relationType])
+  @@index([relationType])
+  @@map("etymology_edges")
+}
+
+model EdgeSource {
+  id              String        @id @default(uuid()) @db.Uuid
+  edgeId          String        @map("edge_id") @db.Uuid
+  sourceId        String        @map("source_id") @db.Uuid
+  sourceLocator   String?       @map("source_locator")
+  quoteExcerpt    String?       @map("quote_excerpt")
+  confidenceDelta Decimal?      @map("confidence_delta") @db.Decimal(3, 2)
+  edge            EtymologyEdge @relation(fields: [edgeId], references: [id], onDelete: Cascade)
+  source          Source        @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([edgeId, sourceId, sourceLocator], map: "uq_edge_sources_edge_source_locator")
+  @@index([sourceId])
+  @@map("edge_sources")
 }

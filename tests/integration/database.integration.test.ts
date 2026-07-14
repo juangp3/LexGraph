@@ -16,8 +16,6 @@ describe("integration: relational core", () => {
 
     client = new Client({ connectionString });
     await client.connect();
-
-    await client.query("TRUNCATE word_sources, meanings, words, sources, languages, language_families RESTART IDENTITY CASCADE");
   });
 
   afterAll(async () => {

@@ -47,6 +47,8 @@ If Docker shows a named-pipe error on Windows, run `docker context use default` 
 8. Validate endpoints:
    - `GET /health`
    - `GET /v1/search?q=father`
+   - `GET /v1/graph/ancestors/{wordId}?depth=4`
+   - `GET /v1/graph/descendants/{wordId}?depth=4`
 9. Run `npm run test:system`.
 
 ## CI Behavior
