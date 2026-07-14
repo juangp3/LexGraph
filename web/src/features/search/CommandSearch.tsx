@@ -87,7 +87,9 @@ export function CommandSearch() {
                   value={result.wordId}
                   onSelect={() => {
                     runCommand(() =>
-                      router.push(`/workspace?word=${encodeURIComponent(result.textOriginal)}`)
+                      router.push(
+                        `/workspace?word=${encodeURIComponent(result.textOriginal)}&wordId=${encodeURIComponent(result.wordId)}`
+                      )
                     );
                   }}
                 >

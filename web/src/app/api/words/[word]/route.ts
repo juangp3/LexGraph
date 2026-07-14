@@ -1,11 +1,50 @@
 import { NextResponse } from 'next/server';
 import { WordDetails } from '@/types/word-details';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ word: string }> }
 ) {
   const { word } = await params;
+
+  const isLikelyWordId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(word);
+
+  if (isLikelyWordId) {
+    try {
+      const backendResponse = await fetch(
+        `${API_BASE}/v1/words/${encodeURIComponent(word)}`
+      );
+
+      if (backendResponse.ok) {
+        const payload = await backendResponse.json();
+
+        const normalized: WordDetails = {
+          word: payload.textOriginal ?? word,
+          language: payload.language ?? 'Unknown',
+          meaning:
+            payload.meanings?.[0]?.gloss ?? 'Meaning unavailable for this node.',
+          sources:
+            payload.sources?.map((source: { title?: string; sourceLocator?: string }) =>
+              source.title
+                ? source.title
+                : source.sourceLocator
+                  ? `Source: ${source.sourceLocator}`
+                  : 'Unattributed source'
+            ) ?? [],
+          timeline: payload.stage
+            ? `${payload.language} (${payload.stage})`
+            : payload.language ?? 'Unknown timeline',
+          ancestry: [{ language: payload.language ?? 'Unknown', stage: payload.textOriginal ?? word }],
+        };
+
+        return NextResponse.json(normalized);
+      }
+    } catch {
+      // Fall through to local fallback.
+    }
+  }
 
   const mockData: { [key: string]: WordDetails } = {
     father: {

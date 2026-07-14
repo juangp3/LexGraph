@@ -1,0 +1,128 @@
+import dagre from 'dagre';
+import type { Edge, Node } from 'reactflow';
+import {
+  GraphTraversalEdge,
+  GraphTraversalResponse,
+  GraphWordDetailsResponse,
+} from '@/types/graph';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
+
+const NODE_WIDTH = 220;
+const NODE_HEIGHT = 70;
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status})`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function fetchWordLabel(wordId: string): Promise<string> {
+  try {
+    const details = await fetchJson<GraphWordDetailsResponse>(
+      `${API_BASE}/v1/words/${encodeURIComponent(wordId)}`
+    );
+    return details.textOriginal || wordId;
+  } catch {
+    return wordId;
+  }
+}
+
+function collectWordIds(rootWordId: string, edges: GraphTraversalEdge[]): string[] {
+  const ids = new Set<string>([rootWordId]);
+  edges.forEach((edge) => {
+    ids.add(edge.fromWordId);
+    ids.add(edge.toWordId);
+  });
+  return [...ids];
+}
+
+function applyDagreLayout(nodes: Node[], edges: Edge[]): Node[] {
+  const graph = new dagre.graphlib.Graph();
+  graph.setDefaultEdgeLabel(() => ({}));
+  graph.setGraph({ rankdir: 'TB', ranksep: 80, nodesep: 40, marginx: 20, marginy: 20 });
+
+  nodes.forEach((node) => {
+    graph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  });
+
+  edges.forEach((edge) => {
+    graph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(graph);
+
+  return nodes.map((node) => {
+    const position = graph.node(node.id);
+    return {
+      ...node,
+      position: {
+        x: position.x - NODE_WIDTH / 2,
+        y: position.y - NODE_HEIGHT / 2,
+      },
+    };
+  });
+}
+
+function buildFlowGraph(
+  rootWordId: string,
+  edges: GraphTraversalEdge[],
+  labelsById: Map<string, string>
+): { nodes: Node[]; edges: Edge[] } {
+  const nodeIds = collectWordIds(rootWordId, edges);
+
+  const nodes: Node[] = nodeIds.map((id) => ({
+    id,
+    data: { label: labelsById.get(id) ?? id },
+    position: { x: 0, y: 0 },
+    style: {
+      borderRadius: 12,
+      border: '1px solid oklch(0.556 0 0)',
+      background: id === rootWordId ? 'oklch(0.922 0 0)' : 'oklch(0.205 0 0)',
+      color: id === rootWordId ? 'oklch(0.205 0 0)' : 'oklch(0.985 0 0)',
+      padding: 8,
+      fontSize: 12,
+      width: NODE_WIDTH,
+    },
+  }));
+
+  const flowEdges: Edge[] = edges.map((edge) => ({
+    id: edge.edgeId,
+    source: edge.fromWordId,
+    target: edge.toWordId,
+    label: edge.relationType,
+    animated: false,
+    style: {
+      opacity: Math.max(0.35, Math.min(1, edge.confidence ?? 0.7)),
+      strokeWidth: 1.6,
+    },
+  }));
+
+  return {
+    nodes: applyDagreLayout(nodes, flowEdges),
+    edges: flowEdges,
+  };
+}
+
+class GraphService {
+  async fetchAncestors(rootWordId: string, depth = 6): Promise<GraphTraversalResponse> {
+    return fetchJson<GraphTraversalResponse>(
+      `${API_BASE}/v1/graph/ancestors/${encodeURIComponent(rootWordId)}?depth=${depth}`
+    );
+  }
+
+  async fetchAncestorsFlow(rootWordId: string, depth = 6): Promise<{ nodes: Node[]; edges: Edge[] }> {
+    const response = await this.fetchAncestors(rootWordId, depth);
+    const wordIds = collectWordIds(rootWordId, response.edges);
+
+    const labels = await Promise.all(
+      wordIds.map(async (id) => [id, await fetchWordLabel(id)] as const)
+    );
+
+    return buildFlowGraph(rootWordId, response.edges, new Map(labels));
+  }
+}
+
+export const graphService = new GraphService();

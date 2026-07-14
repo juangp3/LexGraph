@@ -1,15 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Workspace Inspector Interaction', () => {
-  test('selecting nodes updates inspector without navigation', async ({ page }) => {
+  test('workspace shows graph guidance when no root word is selected', async ({ page }) => {
     await page.goto('/workspace');
 
-    await page.getByRole('button', { name: 'mother' }).click();
-    await expect(page.getByRole('heading', { name: 'mother' })).toBeVisible();
-    await expect(page).toHaveURL(/\/workspace$/);
-
-    await page.getByRole('button', { name: 'father' }).click();
-    await expect(page.getByRole('heading', { name: 'father' })).toBeVisible();
+    await expect(page.getByText('Select a word from search to load its ancestry graph.')).toBeVisible();
+    await expect(page.getByText('Select a node to inspect metadata.')).toBeVisible();
     await expect(page).toHaveURL(/\/workspace$/);
   });
 });
