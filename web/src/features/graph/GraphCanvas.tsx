@@ -15,6 +15,9 @@ import 'reactflow/dist/style.css';
 import { useGraph } from './useGraph';
 import { graphService, mergeFlowGraphs, type FlowGraph, type GraphMode } from './graph.service';
 
+const NODE_TYPES = {};
+const EDGE_TYPES = {};
+
 interface GraphCanvasProps {
   rootWordId: string | null;
   rootWordText?: string | null;
@@ -325,6 +328,8 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
         <ReactFlow
           nodes={visibleNodes}
           edges={visibleEdges as Edge[]}
+          nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
           onNodeClick={onNodeClick}
           fitView
           minZoom={0.2}

@@ -2,6 +2,58 @@ import { NextResponse } from 'next/server';
 import { WordDetails } from '@/types/word-details';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const uuidFallbackData: Record<string, WordDetails> = {
+  'd694f27c-633c-44a9-a881-130b223b1120': {
+    word: 'father',
+    language: 'English',
+    meaning: 'A man in relation to his natural child or children.',
+    sources: ['MSW fallback'],
+    timeline: 'Proto-Indo-European -> Modern English',
+    ancestry: [{ language: 'Modern English', stage: 'father' }],
+  },
+  'fca87886-e8f8-47e2-9baa-329c2f79ff47': {
+    word: 'mother',
+    language: 'English',
+    meaning: 'A woman in relation to her natural child or children.',
+    sources: ['MSW fallback'],
+    timeline: 'Proto-Indo-European -> Modern English',
+    ancestry: [{ language: 'Modern English', stage: 'mother' }],
+  },
+  '6f49fc8d-c95e-425b-8bde-4f9682a41acd': {
+    word: '*ph2ter',
+    language: 'Proto-Indo-European',
+    meaning: 'Reconstructed root for father terms.',
+    sources: ['MSW fallback'],
+    timeline: 'Proto-Indo-European',
+    ancestry: [{ language: 'Proto-Indo-European', stage: '*ph2ter' }],
+  },
+  '37e7f503-a5ca-43e7-ba7b-09a458c1de95': {
+    word: '*fader',
+    language: 'Proto-Germanic',
+    meaning: 'Proto-Germanic form linked to father lexemes.',
+    sources: ['MSW fallback'],
+    timeline: 'Proto-Germanic',
+    ancestry: [{ language: 'Proto-Germanic', stage: '*fader' }],
+  },
+  'f1a49ab9-fbbe-4d16-b693-3af0a4a17e00': {
+    word: 'faeder',
+    language: 'Old English',
+    meaning: 'Old English predecessor of father.',
+    sources: ['MSW fallback'],
+    timeline: 'Old English',
+    ancestry: [{ language: 'Old English', stage: 'faeder' }],
+  },
+  '8d0f8c4c-01d3-4e94-8a1f-df8a30260b49': {
+    word: 'fathir',
+    language: 'Old Norse',
+    meaning: 'Old Norse cognate for father terms.',
+    sources: ['MSW fallback'],
+    timeline: 'Old Norse',
+    ancestry: [{ language: 'Old Norse', stage: 'fathir' }],
+  },
+};
 
 export async function GET(
   _request: Request,
@@ -9,7 +61,7 @@ export async function GET(
 ) {
   const { word } = await params;
 
-  const isLikelyWordId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(word);
+  const isLikelyWordId = UUID_REGEX.test(word);
 
   if (isLikelyWordId) {
     try {
@@ -43,6 +95,22 @@ export async function GET(
       }
     } catch {
       // Fall through to local fallback.
+    }
+
+    const uuidFallback = uuidFallbackData[word.toLowerCase()];
+    if (uuidFallback) {
+      return NextResponse.json(uuidFallback);
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      return NextResponse.json({
+        word,
+        language: 'Unknown',
+        meaning: 'Meaning unavailable for this node.',
+        sources: [],
+        timeline: 'Unknown timeline',
+        ancestry: [{ language: 'Unknown', stage: word }],
+      } satisfies WordDetails);
     }
   }
 
