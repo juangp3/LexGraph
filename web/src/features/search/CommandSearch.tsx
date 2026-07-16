@@ -19,6 +19,8 @@ interface SearchResult {
   language: string;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+
 export function CommandSearch() {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -40,7 +42,7 @@ export function CommandSearch() {
     queryKey: ["search", query],
     queryFn: async () => {
       if (!query) return [];
-      const res = await fetch(`http://localhost:3001/v1/search?q=${query}`);
+      const res = await fetch(`${API_BASE}/v1/search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       return data.results;
     },

@@ -56,4 +56,42 @@ describe("GET /v1/words/:wordId", () => {
     expect(response.status).toBe(404);
     expect(response.body.message).toContain("Word not found");
   });
+
+  it("returns empty arrays for meanings and sources when repository payload is sparse", async () => {
+    const wordId = "11111111-1111-1111-8111-111111111111";
+    const mockRepository: WordDetailsRepository = {
+      getWordDetails: async () => ({
+        wordId,
+        textOriginal: "father",
+        textNormalized: "father",
+        language: "English",
+        stage: null,
+        meanings: [],
+        sources: []
+      })
+    };
+
+    const app = createApp({ wordDetailsRepository: mockRepository });
+    const response = await request(app).get(`/v1/words/${wordId}`);
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.meanings)).toBe(true);
+    expect(Array.isArray(response.body.sources)).toBe(true);
+    expect(response.body.meanings).toHaveLength(0);
+    expect(response.body.sources).toHaveLength(0);
+  });
+
+  it("returns 500 when repository throws", async () => {
+    const mockRepository: WordDetailsRepository = {
+      getWordDetails: async () => {
+        throw new Error("repository boom");
+      }
+    };
+
+    const app = createApp({ wordDetailsRepository: mockRepository });
+    const response = await request(app).get("/v1/words/11111111-1111-1111-8111-111111111111");
+
+    expect(response.status).toBe(500);
+    expect(response.body.message).toContain("Failed to load word details");
+  });
 });
