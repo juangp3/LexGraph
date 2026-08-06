@@ -7,9 +7,10 @@ import { useToast } from '@/components/ui/toast';
 
 interface InspectorPanelProps {
   word: string | null;
+  wordId?: string | null;
 }
 
-const InspectorPanel: React.FC<InspectorPanelProps> = ({ word }) => {
+const InspectorPanel: React.FC<InspectorPanelProps> = ({ word, wordId }) => {
   const { data, isLoading, isError } = useWordDetails(word);
   const showToast = useToast();
 
@@ -81,7 +82,16 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ word }) => {
               <Button type="button" variant="outline" size="sm" onClick={() => void handleCopyLink()}>
                 Copy Link
               </Button>
-              <Button type="button" variant="ghost" size="sm" disabled>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (!wordId) return;
+                  window.dispatchEvent(new CustomEvent('lexgraph:centerNode', { detail: { nodeId: wordId } }));
+                }}
+                disabled={!wordId}
+              >
                 Center Graph
               </Button>
             </div>

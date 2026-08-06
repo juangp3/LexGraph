@@ -8,6 +8,7 @@ import { WorkspaceSearch } from "@/features/workspace/components/WorkspaceSearch
 import { WorkspaceBreadcrumb } from "@/features/workspace/components/WorkspaceBreadcrumb";
 import { WorkspaceTimeline } from "@/features/workspace/components/WorkspaceTimeline";
 import { WorkspaceGraphControls } from "@/features/workspace/components/WorkspaceGraphControls";
+import { useWorkspaceSearchFocus } from '@/features/workspace/components/WorkspaceSearch';
 import { WorkspaceFilters } from "@/features/workspace/components/WorkspaceFilters";
 import { WorkspaceStatusBar } from "@/features/workspace/components/WorkspaceStatusBar";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
@@ -32,6 +33,7 @@ function Workspace() {
     );
   };
 
+  useWorkspaceSearchFocus();
   return (
     <ReactFlowProvider>
       <div className="grid min-h-screen grid-rows-[auto_auto_1fr_auto] bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_auto_1fr_auto]">
@@ -65,7 +67,7 @@ function Workspace() {
                   <h2 className="text-xl font-semibold tracking-tight text-foreground">Inspector and filters</h2>
                 </div>
                 <WorkspaceFilters />
-                <InspectorPanel word={selectedWord} />
+                <InspectorPanel word={selectedWord} wordId={selectedNodeId} />
               </div>
             </DrawerContent>
           </Drawer>
@@ -89,7 +91,7 @@ function Workspace() {
 
         <div className="lex-panel hidden flex-col gap-4 overflow-y-auto border-t border-border/60 p-4 lg:flex lg:border-t-0 lg:p-6">
           <WorkspaceFilters />
-          <InspectorPanel word={selectedWord} />
+          <InspectorPanel word={selectedWord} wordId={selectedNodeId} />
         </div>
 
         <div className="col-span-2 border-t border-border/60 bg-background/70 backdrop-blur">

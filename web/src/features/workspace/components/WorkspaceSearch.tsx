@@ -86,6 +86,7 @@ export function WorkspaceSearch({
             placeholder={placeholder}
             value={query}
             autoFocus={autoFocus}
+            id="workspace-search-input"
             onValueChange={setQuery}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && firstResult) {
@@ -127,4 +128,17 @@ export function WorkspaceSearch({
       </Command>
     </div>
   );
+}
+
+// focus search when requested by keyboard shortcut or global event
+// listen to custom event 'lexgraph:focusSearch'
+export function useWorkspaceSearchFocus() {
+  useEffect(() => {
+    const handler = () => {
+      const el = document.getElementById('workspace-search-input') as HTMLInputElement | null;
+      if (el) el.focus();
+    };
+    window.addEventListener('lexgraph:focusSearch', handler as EventListener);
+    return () => window.removeEventListener('lexgraph:focusSearch', handler as EventListener);
+  }, []);
 }

@@ -37,6 +37,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
   const { relationFilters, toggleFilter: toggleStoreFilter, resetRelationFilters } = useGraphStore();
   const reactFlow = useReactFlow();
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showMiniMap, setShowMiniMap] = useState(true);
 
   useEffect(() => {
     resetRelationFilters();
@@ -210,6 +211,71 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     return () => cancelAnimationFrame(id);
   }, [visibleNodes.length, visibleEdges.length, reactFlow]);
 
+  // Global keyboard handlers and custom events (center node, toggle minimap, focus search)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        try { reactFlow.fitView({ padding: 0.2 }); } catch {}
+      }
+      if (e.key === 'Escape') {
+        // clear selection
+        try {
+          const nodes = reactFlow.getNodes();
+          reactFlow.setNodes(nodes.map((n) => ({ ...n, selected: false })));
+        } catch {}
+      }
+      if (e.key === 'Delete') {
+        // collapse selected branch
+        collapseSelectedBranch();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('lexgraph:focusSearch'));
+      }
+    };
+
+    const onCenterNode = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail ?? {};
+        const nodeId = detail?.nodeId as string | undefined;
+        if (!nodeId) return;
+        const node = reactFlow.getNode(nodeId);
+        if (!node) return;
+        // select node
+        const nodes = reactFlow.getNodes();
+        reactFlow.setNodes(nodes.map((n) => ({ ...n, selected: n.id === nodeId })));
+        // center the view on the node
+        if (typeof (reactFlow as any).setCenter === 'function') {
+          try { (reactFlow as any).setCenter(node.position.x, node.position.y, { duration: 200 }); } catch {}
+        } else if (typeof (reactFlow as any).setViewport === 'function') {
+          try { (reactFlow as any).setViewport({ x: node.position.x, y: node.position.y, zoom: reactFlow.getZoom() }, { duration: 200 }); } catch {}
+        } else {
+          try { reactFlow.fitView({ padding: 0.2 }); } catch {}
+        }
+      } catch {}
+    };
+
+    const onCenterSelection = () => {
+      if (!selectedNodeId) return;
+      window.dispatchEvent(new CustomEvent('lexgraph:centerNode', { detail: { nodeId: selectedNodeId } }));
+    };
+
+    const onToggleMiniMap = () => setShowMiniMap((v) => !v);
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('lexgraph:centerNode' as any, onCenterNode as EventListener);
+    window.addEventListener('lexgraph:centerSelection' as any, onCenterSelection as EventListener);
+    window.addEventListener('lexgraph:toggleMiniMap' as any, onToggleMiniMap as EventListener);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('lexgraph:centerNode' as any, onCenterNode as EventListener);
+      window.removeEventListener('lexgraph:centerSelection' as any, onCenterSelection as EventListener);
+      window.removeEventListener('lexgraph:toggleMiniMap' as any, onToggleMiniMap as EventListener);
+    };
+  }, [reactFlow, selectedNodeId, collapseSelectedBranch]);
+
   const hasGraph = useMemo(() => visibleNodes.length > 0 && visibleEdges.length > 0, [visibleNodes.length, visibleEdges.length]);
 
   const graphStateCard = (title: string, body: string, action?: React.ReactNode) => (
@@ -339,7 +405,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
           proOptions={{ hideAttribution: true }}
         >
           <Background gap={20} size={1} />
-          <MiniMap pannable zoomable nodeStrokeWidth={3} />
+          {showMiniMap && <MiniMap pannable zoomable nodeStrokeWidth={3} />}
           <Controls showFitView showZoom showInteractive />
         </ReactFlow>
       </div>
