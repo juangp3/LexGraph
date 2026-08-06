@@ -6,3 +6,13 @@ dist/
 npm-debug.log
 yarn-error.log
 logs/*.ndjson
+
+# Generated test/report artifacts
+web/playwright-report/
+web/test-results/
+
+# Local docs exports
+docs/LexGraph-main*.zip
+
+# Working duplicate of generated doc
+docs/1.GraphWorkspaceFoundationSpecification.md

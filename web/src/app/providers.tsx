@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect } from "react";
+import { ThemeProvider } from "@/features/theme/ThemeProvider";
+import { ToastProvider, Toaster } from "@/components/ui/toast";
 
 const queryClient = new QueryClient();
 
@@ -35,9 +37,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+          <ReactQueryDevtools initialIsOpen={false} />
+          <Toaster />
+        </QueryClientProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

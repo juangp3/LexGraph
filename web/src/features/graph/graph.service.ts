@@ -23,6 +23,11 @@ interface SearchResponse {
   results: SearchResult[];
 }
 
+interface NodeMetadata {
+  label: string;
+  language: string;
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
 
 const NODE_WIDTH = 220;
@@ -36,14 +41,42 @@ async function fetchJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function fetchWordLabel(wordId: string): Promise<string> {
+function resolveLanguageFamily(language: string): string {
+  const normalized = language.toLowerCase();
+
+  if (/(english|german|french|dutch|swedish|norwegian|danish|icelandic|germanic)/.test(normalized)) {
+    return 'germanic';
+  }
+  if (/(latin|spanish|portuguese|italian|romanian|french|romance)/.test(normalized)) {
+    return 'romance';
+  }
+  if (/(slavic|russian|polish|czech|serbian|croatian|ukrainian|bulgarian)/.test(normalized)) {
+    return 'slavic';
+  }
+  if (/(arabic|hebrew|aramaic|amharic|semitic)/.test(normalized)) {
+    return 'semitic';
+  }
+  if (/(hungarian|finnish|estonian|mari|komi|udmurt|uralic)/.test(normalized)) {
+    return 'uralic';
+  }
+
+  return 'unknown';
+}
+
+async function fetchWordMetadata(wordId: string): Promise<NodeMetadata> {
   try {
     const details = await fetchJson<GraphWordDetailsResponse>(
       `${API_BASE}/v1/words/${encodeURIComponent(wordId)}`
     );
-    return details.textOriginal || wordId;
+    return {
+      label: details.textOriginal || wordId,
+      language: details.language || 'Unknown',
+    };
   } catch {
-    return wordId;
+    return {
+      label: wordId,
+      language: 'Unknown',
+    };
   }
 }
 
@@ -86,23 +119,35 @@ function applyDagreLayout(nodes: Node[], edges: Edge[]): Node[] {
 function buildFlowGraph(
   rootWordId: string,
   edges: GraphTraversalEdge[],
-  labelsById: Map<string, string>,
+  metadataById: Map<string, NodeMetadata>,
   mode: GraphMode
 ): FlowGraph {
   const nodeIds = collectWordIds(rootWordId, edges);
 
   const nodes: Node[] = nodeIds.map((id) => ({
     id,
-    data: { label: labelsById.get(id) ?? id },
+    data: {
+      label: metadataById.get(id)?.label ?? id,
+      language: metadataById.get(id)?.language ?? 'Unknown',
+      family: resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown'),
+    },
     position: { x: 0, y: 0 },
     style: {
-      borderRadius: 12,
-      border: '1px solid oklch(0.556 0 0)',
-      background: id === rootWordId ? 'oklch(0.922 0 0)' : 'oklch(0.205 0 0)',
-      color: id === rootWordId ? 'oklch(0.205 0 0)' : 'oklch(0.985 0 0)',
-      padding: 8,
+      borderRadius: 18,
+      border: `1px solid var(--graph-family-${resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown')})`,
+      background:
+        id === rootWordId
+          ? `color-mix(in srgb, var(--graph-family-${resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown')}) 16%, var(--card))`
+          : `color-mix(in srgb, var(--graph-family-${resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown')}) 11%, var(--card))`,
+      color: 'var(--card-foreground)',
+      padding: 12,
       fontSize: 12,
+      fontWeight: 600,
       width: NODE_WIDTH,
+      boxShadow:
+        id === rootWordId
+          ? '0 20px 40px -28px rgb(0 0 0 / 0.55)'
+          : '0 14px 28px -28px rgb(0 0 0 / 0.35)',
     },
   }));
 
@@ -115,7 +160,13 @@ function buildFlowGraph(
     animated: false,
     style: {
       opacity: Math.max(0.35, Math.min(1, edge.confidence ?? 0.7)),
-      strokeWidth: 1.6,
+      stroke: `var(--graph-edge-${mode})`,
+      strokeWidth: mode === 'ancestors' ? 2.3 : 1.9,
+    },
+    labelStyle: {
+      fill: 'var(--muted-foreground)',
+      fontSize: 11,
+      fontWeight: 500,
     },
   }));
 
@@ -191,11 +242,11 @@ class GraphService {
     const response = await this.fetchTraversal(mode, rootWordId, depth);
     const wordIds = collectWordIds(rootWordId, response.edges);
 
-    const labels = await Promise.all(
-      wordIds.map(async (id) => [id, await fetchWordLabel(id)] as const)
+    const metadata = await Promise.all(
+      wordIds.map(async (id) => [id, await fetchWordMetadata(id)] as const)
     );
 
-    return buildFlowGraph(rootWordId, response.edges, new Map(labels), mode);
+    return buildFlowGraph(rootWordId, response.edges, new Map(metadata), mode);
   }
 
   async fetchAncestorsFlow(
@@ -224,11 +275,11 @@ class GraphService {
 
     const wordIds = collectWordIds(resolvedRootWordId, response.edges);
 
-    const labels = await Promise.all(
-      wordIds.map(async (id) => [id, await fetchWordLabel(id)] as const)
+    const metadata = await Promise.all(
+      wordIds.map(async (id) => [id, await fetchWordMetadata(id)] as const)
     );
 
-    return buildFlowGraph(resolvedRootWordId, response.edges, new Map(labels), 'ancestors');
+    return buildFlowGraph(resolvedRootWordId, response.edges, new Map(metadata), 'ancestors');
   }
 }
 

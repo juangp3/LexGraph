@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { searchWords, type SearchResult } from '@/features/search/search.service';
+import { highlightMatch } from '@/features/search/highlight';
 
 interface WorkspaceSearchProps {
   className?: string;
@@ -58,7 +59,7 @@ export function WorkspaceSearch({
   const wrapperClassName = useMemo(
     () =>
       cn(
-        'w-full overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[0_30px_90px_-35px_rgba(0,0,0,0.65)] backdrop-blur',
+        'lex-panel w-full overflow-hidden rounded-[var(--radius-2xl)]',
         mode === 'hero' && 'border-border/80 bg-background/90 p-1',
         className
       ),
@@ -93,7 +94,7 @@ export function WorkspaceSearch({
               }
             }}
             className={cn(
-              'h-12 rounded-xl border-0 bg-transparent text-base shadow-none focus-visible:ring-0',
+              'lex-focus-ring h-12 rounded-xl border-0 bg-transparent text-base shadow-none focus-visible:ring-0',
               mode === 'hero' && 'h-14 text-lg'
             )}
           />
@@ -116,7 +117,7 @@ export function WorkspaceSearch({
                   onSelect={() => navigateToResult(result)}
                   className="justify-between"
                 >
-                  <span className="font-medium text-foreground">{result.textOriginal}</span>
+                  <span className="font-medium text-foreground">{highlightMatch(result.textOriginal, query)}</span>
                   <span className="text-xs text-muted-foreground">{result.language}</span>
                 </CommandItem>
               ))}

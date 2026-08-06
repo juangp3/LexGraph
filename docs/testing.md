@@ -20,7 +20,7 @@
 - `npm run infra:down`
 - `npm run infra:full`
 
-If Docker shows a named-pipe error on Windows, run `docker context use default` and retry.
+If Docker shows a named-pipe error on Windows, start Docker Desktop first. If the engine is already running, run `docker context ls` and `docker context use default` and retry.
 
 ## Week 2 Database Commands
 

@@ -10,12 +10,17 @@ import { WorkspaceTimeline } from "@/features/workspace/components/WorkspaceTime
 import { WorkspaceGraphControls } from "@/features/workspace/components/WorkspaceGraphControls";
 import { WorkspaceFilters } from "@/features/workspace/components/WorkspaceFilters";
 import { WorkspaceStatusBar } from "@/features/workspace/components/WorkspaceStatusBar";
+import { ThemeToggle } from "@/features/theme/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { useState } from "react";
 
 import { ReactFlowProvider } from "reactflow";
 
 function Workspace() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const selectedWordText = searchParams.get("word");
   const selectedNodeId = searchParams.get("wordId") ?? searchParams.get("id") ?? selectedWordText;
   const selectedWord = useMemo(() => selectedWordText ?? selectedNodeId, [selectedNodeId, selectedWordText]);
@@ -29,13 +34,14 @@ function Workspace() {
 
   return (
     <ReactFlowProvider>
-      <div className="grid min-h-screen grid-rows-[auto_auto_1fr_auto] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_42%),linear-gradient(180deg,rgba(10,12,16,1),rgba(7,8,11,1))] text-foreground lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_auto_1fr_auto]">
-        <header className="col-span-2 flex items-center justify-between gap-4 border-b border-border/70 px-4 py-4 backdrop-blur xl:px-6">
+      <div className="grid min-h-screen grid-rows-[auto_auto_1fr_auto] bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_auto_1fr_auto]">
+        <header className="lex-shell col-span-2 flex items-center justify-between gap-4 rounded-none border-x-0 border-t-0 px-4 py-4 xl:px-6">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">LexGraph</p>
             <h1 className="text-lg font-semibold tracking-tight">Workspace</h1>
           </div>
           <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
+            <ThemeToggle />
             <span className="rounded-full border border-border/70 px-3 py-1">Cmd+K search</span>
             <span className="rounded-full border border-border/70 px-3 py-1">React Flow</span>
           </div>
@@ -44,12 +50,30 @@ function Workspace() {
         <div className="col-span-2 border-b border-border/60 px-4 py-4 lg:px-6">
           <WorkspaceSearch navigationMode="replace" placeholder="Search the workspace..." />
           <div className="mt-3">
-          <WorkspaceBreadcrumb />
+            <WorkspaceBreadcrumb />
           </div>
+          <div className="mt-3 flex gap-2 lg:hidden">
+            <Button type="button" variant="outline" size="sm" onClick={() => setMobileDrawerOpen(true)}>
+              Open details
+            </Button>
+          </div>
+          <Drawer open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
+            <DrawerContent>
+              <div className="space-y-4 pt-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Workspace details</p>
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">Inspector and filters</h2>
+                </div>
+                <WorkspaceFilters />
+                <InspectorPanel word={selectedWord} />
+              </div>
+            </DrawerContent>
+          </Drawer>
         </div>
 
         <div className="relative overflow-hidden border-border/60 lg:border-r">
           <GraphCanvas
+            key={selectedNodeId ?? "empty"}
             rootWordId={selectedNodeId}
             rootWordText={selectedWordText}
             selectedNodeId={selectedNodeId}
@@ -63,7 +87,7 @@ function Workspace() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 overflow-y-auto border-t border-border/60 bg-card/40 p-4 lg:border-t-0 lg:p-6">
+        <div className="lex-panel hidden flex-col gap-4 overflow-y-auto border-t border-border/60 p-4 lg:flex lg:border-t-0 lg:p-6">
           <WorkspaceFilters />
           <InspectorPanel word={selectedWord} />
         </div>

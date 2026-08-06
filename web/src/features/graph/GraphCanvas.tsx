@@ -6,12 +6,13 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap,
-  ReactFlowProvider,
   useReactFlow,
   type Edge,
   type Node,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGraph } from './useGraph';
 import { graphService, mergeFlowGraphs, type FlowGraph, type GraphMode } from './graph.service';
 import { useGraphStore } from './graph.store';
@@ -39,9 +40,6 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
 
   useEffect(() => {
     resetRelationFilters();
-    setOverlayGraphs({});
-    setExpandedDescendantGraphs({});
-    setCollapsedNodeIds(new Set());
   }, [rootWordId, resetRelationFilters]);
 
   const onNodeClick = useCallback(
@@ -214,60 +212,68 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
 
   const hasGraph = useMemo(() => visibleNodes.length > 0 && visibleEdges.length > 0, [visibleNodes.length, visibleEdges.length]);
 
+  const graphStateCard = (title: string, body: string, action?: React.ReactNode) => (
+    <section className="lex-card rounded-[var(--radius-2xl)] p-5" aria-label="Graph workspace">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <h2 className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Interactive Graph</h2>
+          <p className="text-lg font-semibold text-foreground">{title}</p>
+          <p className="text-sm leading-6 text-muted-foreground">{body}</p>
+        </div>
+        {action}
+      </div>
+    </section>
+  );
+
   if (!rootWordId) {
-    return (
-      <section className="rounded-xl border border-border/80 bg-card p-4" aria-label="Graph workspace">
-        <h2 className="text-sm uppercase text-muted-foreground">Interactive Graph</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Select a word from search to load its ancestry graph.
-        </p>
-      </section>
+    return graphStateCard(
+      'Search to begin exploring.',
+      'Pick a word from search to load its ancestry graph, inspect its origin, and expand outward without leaving the workspace.'
     );
   }
 
   if (isLoading) {
     return (
-      <section className="rounded-xl border border-border/80 bg-card p-4" aria-label="Graph workspace">
-        <h2 className="text-sm uppercase text-muted-foreground">Interactive Graph</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Loading graph...</p>
+      <section className="lex-card rounded-[var(--radius-2xl)] p-5" aria-label="Graph workspace">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Interactive Graph</h2>
+            <p className="text-sm text-muted-foreground">Loading graph...</p>
+            <Skeleton className="h-6 w-56" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <Skeleton className="h-[420px] w-full rounded-[var(--radius-2xl)] md:h-[560px]" />
+        </div>
       </section>
     );
   }
 
   if (isError) {
-    return (
-      <section className="rounded-xl border border-destructive/50 bg-card p-4" aria-label="Graph workspace">
-        <h2 className="text-sm uppercase text-muted-foreground">Interactive Graph</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Unable to load graph data for this word.
-        </p>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="mt-3 rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
-        >
-          Retry
-        </button>
-      </section>
+    return graphStateCard(
+      'Unable to load this graph.',
+      'The workspace could not retrieve ancestry data for this word. Retry to request the graph again.' ,
+      <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
+        Retry
+      </Button>
     );
   }
 
   return (
-    <section className="rounded-xl border border-border/80 bg-card p-2" aria-label="Graph workspace">
+    <section className="lex-card rounded-[var(--radius-2xl)] p-2" aria-label="Graph workspace">
       <div className="flex flex-wrap items-center justify-between gap-2 px-2 py-1">
-        <h2 className="text-sm uppercase text-muted-foreground">Interactive Graph</h2>
+        <h2 className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Interactive Graph</h2>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => reactFlow.fitView({ padding: 0.2 })}
-            className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
+            className="rounded-md border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted"
           >
             Fit View
           </button>
           <button
             type="button"
             onClick={downloadPng}
-            className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
+            className="rounded-md border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted"
           >
             Download PNG
           </button>
@@ -275,7 +281,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
             type="button"
             onClick={expandDescendants}
             disabled={!selectedNodeId || isExpandingDescendants}
-            className="rounded-md border border-border px-2 py-1 text-xs disabled:opacity-50 hover:bg-muted"
+            className="rounded-md border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted disabled:opacity-50"
           >
             {isExpandingDescendants ? 'Loading descendants...' : 'Expand Descendants'}
           </button>
@@ -283,14 +289,14 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
             type="button"
             onClick={collapseSelectedBranch}
             disabled={!selectedNodeId}
-            className="rounded-md border border-border px-2 py-1 text-xs disabled:opacity-50 hover:bg-muted"
+            className="rounded-md border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted disabled:opacity-50"
           >
             Collapse/Expand Branch
           </button>
           <button
             type="button"
             onClick={expandAllBranches}
-            className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
+            className="rounded-md border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted"
           >
             Expand All
           </button>
