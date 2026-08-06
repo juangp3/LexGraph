@@ -50,6 +50,15 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     [onSelectNode]
   );
 
+  const onNodeDoubleClick = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      // expand descendants for the double-clicked node and select it
+      void expandDescendantsFor(node.id);
+      onSelectNode(node.id, String(node.data?.label ?? node.id));
+    },
+    [expandDescendantsFor, onSelectNode]
+  );
+
   const loadRelationOverlay = useCallback(
     async (mode: Extract<GraphMode, 'borrowings' | 'cognates'>) => {
       if (!rootWordId) return;
@@ -89,6 +98,17 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
       setIsExpandingDescendants(false);
     }
   }, [selectedNodeId, expandedDescendantGraphs]);
+
+  const expandDescendantsFor = useCallback(async (nodeId: string) => {
+    if (!nodeId || expandedDescendantGraphs[nodeId]) return;
+    setIsExpandingDescendants(true);
+    try {
+      const graph = await graphService.fetchTraversalFlow('descendants', nodeId, 3);
+      setExpandedDescendantGraphs((prev) => ({ ...prev, [nodeId]: graph }));
+    } finally {
+      setIsExpandingDescendants(false);
+    }
+  }, [expandedDescendantGraphs]);
 
   const collapseSelectedBranch = useCallback(() => {
     if (!selectedNodeId) return;
@@ -182,12 +202,68 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     [filteredEdges, hiddenDescendants]
   );
 
+  // compute highlighted path edges/nodes (root -> selected, plus descendants from selected)
+  const { pathEdgeIds, pathNodeIds } = useMemo(() => {
+    const edgeMap = new Map<string, string[]>();
+    for (const e of visibleEdges) {
+      const arr = edgeMap.get(e.source) ?? [];
+      arr.push(e.target);
+      edgeMap.set(e.source, arr);
+    }
+
+    const bfsPath = (start: string | null, target: string | null) => {
+      if (!start || !target) return [] as string[];
+      const queue: string[][] = [[start]];
+      const visited = new Set<string>([start]);
+      while (queue.length) {
+        const path = queue.shift() as string[];
+        const last = path[path.length - 1];
+        if (last === target) return path;
+        const neighbors = edgeMap.get(last) ?? [];
+        for (const n of neighbors) {
+          if (visited.has(n)) continue;
+          visited.add(n);
+          queue.push([...path, n]);
+        }
+      }
+      return [] as string[];
+    };
+
+    const nodeSet = new Set<string>();
+    const edgeSet = new Set<string>();
+
+    if (rootWordId && selectedNodeId) {
+      const nodesPath = bfsPath(rootWordId, selectedNodeId);
+      for (let i = 0; i < nodesPath.length; i++) {
+        nodeSet.add(nodesPath[i]);
+        if (i < nodesPath.length - 1) edgeSet.add(`${nodesPath[i]}->${nodesPath[i + 1]}`);
+      }
+    }
+
+    if (selectedNodeId) {
+      // dfs descendants from selected
+      const stack = [selectedNodeId];
+      while (stack.length) {
+        const cur = stack.pop() as string;
+        nodeSet.add(cur);
+        const children = edgeMap.get(cur) ?? [];
+        for (const c of children) {
+          edgeSet.add(`${cur}->${c}`);
+          if (!nodeSet.has(c)) stack.push(c);
+        }
+      }
+    }
+
+    return { pathEdgeIds: edgeSet, pathNodeIds: nodeSet };
+  }, [visibleEdges, rootWordId, selectedNodeId]);
+
   const visibleNodes = useMemo(() => {
     return mergedGraph.nodes
       .filter((node) => visibleNodeIds.has(node.id) && !hiddenDescendants.has(node.id))
       .map((node) => {
         const isSelected = selectedNodeId === node.id;
         const isCollapsed = collapsedNodeIds.has(node.id);
+        const isInPath = pathNodeIds.has(node.id);
         return {
           ...node,
           selected: isSelected,
@@ -197,11 +273,12 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
           },
           style: {
             ...(node.style ?? {}),
-            boxShadow: isSelected ? '0 0 0 2px oklch(0.708 0 0)' : 'none',
+            boxShadow: isSelected ? '0 0 0 2px oklch(0.708 0 0)' : isInPath ? '0 0 8px rgba(59,130,246,0.28)' : 'none',
+            opacity: pathNodeIds.size > 0 && !isInPath ? 0.3 : 1,
           },
         };
       });
-  }, [mergedGraph.nodes, visibleNodeIds, hiddenDescendants, selectedNodeId, collapsedNodeIds]);
+  }, [mergedGraph.nodes, visibleNodeIds, hiddenDescendants, selectedNodeId, collapsedNodeIds, pathNodeIds]);
 
   useEffect(() => {
     if (!visibleNodes.length) return;
@@ -390,10 +467,23 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
       <div ref={graphContainerRef} className="h-[420px] w-full md:h-[560px]">
         <ReactFlow
           nodes={visibleNodes}
-          edges={visibleEdges as Edge[]}
+          edges={visibleEdges.map((edge) => {
+            const eid = `${edge.source}->${edge.target}`;
+            const isPath = (pathEdgeIds as Set<string>).has(eid);
+            return {
+              ...edge,
+              animated: isPath,
+              style: {
+                ...(edge.style ?? {}),
+                stroke: isPath ? 'var(--graph-edge-ancestor, #60a5fa)' : undefined,
+                opacity: pathEdgeIds.size > 0 && !isPath ? 0.18 : 1,
+              },
+            } as Edge;
+          }) as Edge[]}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
           onNodeClick={onNodeClick}
+          onNodeDoubleClick={onNodeDoubleClick}
           fitView
           minZoom={0.2}
           maxZoom={1.8}
