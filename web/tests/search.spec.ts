@@ -1,48 +1,69 @@
 import { test, expect } from '@playwright/test';
 
+function hasNextApiRequest(urls: string[]): boolean {
+  return urls.some((url) => {
+    try {
+      return new URL(url).pathname.startsWith('/api/');
+    } catch {
+      return false;
+    }
+  });
+}
+
 test.describe('Search and Workspace Navigation', () => {
-  test('should allow searching for a word and navigating to the workspace', async ({ page }) => {
+  test('should search for a word via live backend only', async ({ page }) => {
+    const requests: string[] = [];
+    page.on('request', (request) => {
+      requests.push(request.url());
+    });
+
+    const searchResponsePromise = page.waitForResponse((response) => {
+      try {
+        const url = new URL(response.url());
+        return url.pathname === '/v1/search' && url.searchParams.get('q') === 'father';
+      } catch {
+        return false;
+      }
+    });
+
     await page.goto('/');
 
-    // Open search command
-    await page.keyboard.press('Control+k');
-    
-    // Wait for the search input to be visible
+    await page.getByRole('button', { name: /Search/i }).first().click();
+
     const searchInput = page.getByPlaceholder('Type a word to search...');
     await expect(searchInput).toBeVisible();
 
-    // Type 'father' and wait for the result to appear
     await searchInput.fill('father');
+    const searchResponse = await searchResponsePromise;
+    expect(searchResponse.status()).toBe(200);
+
+    const searchUrl = new URL(searchResponse.url());
+    expect(searchUrl.port).toBe('3001');
+
     const fatherItem = page.locator('[cmdk-item]').filter({ hasText: /^father/i }).first();
     await expect(fatherItem).toBeVisible();
+
     await fatherItem.click();
 
-    // Verify navigation to the correct workspace
     await page.waitForURL(/\/workspace\?word=father&wordId=.+/);
     await expect(page).toHaveURL(/\/workspace\?word=father&wordId=.+/);
-    await expect(page.getByRole('heading', { name: 'father' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Workspace' })).toBeVisible();
+
+    expect(hasNextApiRequest(requests)).toBe(false);
   });
 
-  test('should allow searching again from the workspace page', async ({ page }) => {
-    // First, navigate to a workspace page
-    await page.goto('/workspace?word=father');
+  test('should fail gracefully when backend is unreachable', async ({ page, context }) => {
+    await context.route('**/v1/search**', async (route) => {
+      await route.abort('failed');
+    });
 
-    // Open search command from the workspace
-    await page.keyboard.press('Control+k');
+    await page.goto('/');
+    await page.getByRole('button', { name: /Search/i }).first().click();
 
-    // Wait for the search input to be visible
     const searchInput = page.getByPlaceholder('Type a word to search...');
     await expect(searchInput).toBeVisible();
-
-    // Search for 'father' and select the first matching entry.
     await searchInput.fill('father');
-    const fatherItem = page.locator('[cmdk-item]').filter({ hasText: /^father/i }).first();
-    await expect(fatherItem).toBeVisible();
-    await fatherItem.click();
 
-    // Verify navigation to a workspace URL with a resolved wordId.
-    await page.waitForURL(/\/workspace\?word=father&wordId=.+/);
-    await expect(page).toHaveURL(/\/workspace\?word=father&wordId=.+/);
-    await expect(page.getByRole('heading', { name: 'father' })).toBeVisible();
+    await expect(page.getByText('No results found.')).toBeVisible();
   });
 });

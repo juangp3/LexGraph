@@ -359,9 +359,5 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
 }
 
 export function GraphCanvas(props: GraphCanvasProps) {
-  return (
-    <ReactFlowProvider>
-      <GraphCanvasInner {...props} />
-    </ReactFlowProvider>
-  );
+  return <GraphCanvasInner {...props} />;
 }

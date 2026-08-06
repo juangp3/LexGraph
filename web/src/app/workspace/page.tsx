@@ -4,15 +4,21 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import InspectorPanel from "@/features/inspector/InspectorPanel";
 import { GraphCanvas } from "@/features/graph/GraphCanvas";
+import { WorkspaceSearch } from "@/features/workspace/components/WorkspaceSearch";
+import { WorkspaceBreadcrumb } from "@/features/workspace/components/WorkspaceBreadcrumb";
+import { WorkspaceTimeline } from "@/features/workspace/components/WorkspaceTimeline";
+import { WorkspaceGraphControls } from "@/features/workspace/components/WorkspaceGraphControls";
+import { WorkspaceFilters } from "@/features/workspace/components/WorkspaceFilters";
+import { WorkspaceStatusBar } from "@/features/workspace/components/WorkspaceStatusBar";
+
+import { ReactFlowProvider } from "reactflow";
 
 function Workspace() {
   const searchParams = useSearchParams();
-  const initialWord = searchParams.get("word") ?? searchParams.get("wordId");
-  const initialWordId = searchParams.get("wordId");
+  const initialWord = searchParams.get("word") || "home";
+  const initialWordId = searchParams.get("id") || "home";
 
-  const [selectedWord, setSelectedWord] = useState<string | null>(
-    initialWordId ?? initialWord
-  );
+  const [selectedWord, setSelectedWord] = useState<string | null>(initialWordId ?? initialWord);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialWordId);
 
   useEffect(() => {
@@ -21,21 +27,41 @@ function Workspace() {
   }, [initialWord, initialWordId]);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6" key={initialWordId ?? initialWord ?? "empty"}>
-      <h1 className="text-2xl font-bold">Workspace</h1>
+    <ReactFlowProvider>
+      <div className="grid h-full grid-cols-[1fr_350px] grid-rows-[auto_1fr_auto]">
+        <div className="col-span-2 border-b p-4">
+          <WorkspaceSearch />
+          <WorkspaceBreadcrumb />
+        </div>
 
-      <GraphCanvas
-        rootWordId={selectedNodeId}
-        rootWordText={initialWord}
-        selectedNodeId={selectedNodeId}
-        onSelectNode={(nodeId, label) => {
-          setSelectedNodeId(nodeId);
-          setSelectedWord(nodeId);
-        }}
-      />
+        <div className="relative row-start-2 overflow-hidden border-r">
+          <GraphCanvas
+            rootWordId={selectedNodeId}
+            rootWordText={initialWord}
+            selectedNodeId={selectedNodeId}
+            onSelectNode={(nodeId, label) => {
+              setSelectedNodeId(nodeId);
+              setSelectedWord(nodeId);
+            }}
+          />
+          <div className="absolute bottom-4 left-4">
+            <WorkspaceTimeline />
+          </div>
+          <div className="absolute right-4 top-4">
+            <WorkspaceGraphControls />
+          </div>
+        </div>
 
-      <InspectorPanel word={selectedWord} />
-    </div>
+        <div className="row-start-2 flex flex-col gap-4 overflow-y-auto p-4">
+          <WorkspaceFilters />
+          <InspectorPanel word={selectedWord} />
+        </div>
+
+        <div className="col-span-2 row-start-3 border-t">
+          <WorkspaceStatusBar />
+        </div>
+      </div>
+    </ReactFlowProvider>
   );
 }
 

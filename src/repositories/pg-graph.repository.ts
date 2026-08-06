@@ -114,22 +114,61 @@ export class PgGraphRepository implements GraphRepository {
   }
 
   async findAncestors(wordId: string, depth: number): Promise<GraphTraversalEdge[]> {
-    return this.traverse(wordId, depth, "ancestors");
+    return this.privateTraverse(wordId, depth, "ancestors");
   }
 
   async findDescendants(wordId: string, depth: number): Promise<GraphTraversalEdge[]> {
-    return this.traverse(wordId, depth, "descendants");
+    return this.privateTraverse(wordId, depth, "descendants");
   }
 
   async findBorrowings(wordId: string, depth: number): Promise<GraphTraversalEdge[]> {
-    return this.traverse(wordId, depth, "ancestors", "BORROWED_FROM");
+    return this.privateTraverse(wordId, depth, "ancestors", "BORROWED_FROM");
   }
 
   async findCognates(wordId: string, depth: number): Promise<GraphTraversalEdge[]> {
-    return this.traverse(wordId, depth, "ancestors", "COGNATE_WITH");
+    return this.privateTraverse(wordId, depth, "ancestors", "COGNATE_WITH");
   }
 
-  private async traverse(
+  async traverse(
+    query: {
+      rootWordId: string;
+      depth: number;
+      include: ('ancestors' | 'descendants' | 'borrowings' | 'cognates')[];
+    }
+  ): Promise<GraphTraversalEdge[]> {
+    const { rootWordId, depth, include } = query;
+    const allEdges: GraphTraversalEdge[] = [];
+    const seenEdges = new Set<string>();
+
+    const tasks = include.map(type => {
+      switch (type) {
+        case 'ancestors':
+          return this.privateTraverse(rootWordId, depth, 'ancestors');
+        case 'descendants':
+          return this.privateTraverse(rootWordId, depth, 'descendants');
+        case 'borrowings':
+          return this.privateTraverse(rootWordId, depth, 'ancestors', 'BORROWED_FROM');
+        case 'cognates':
+          return this.privateTraverse(rootWordId, depth, 'ancestors', 'COGNATE_WITH');
+        default:
+          return Promise.resolve([]);
+      }
+    });
+
+    const results = await Promise.all(tasks);
+    for (const resultSet of results) {
+      for (const edge of resultSet) {
+        if (!seenEdges.has(edge.edgeId)) {
+          allEdges.push(edge);
+          seenEdges.add(edge.edgeId);
+        }
+      }
+    }
+
+    return allEdges;
+  }
+
+  private async privateTraverse(
     wordId: string,
     depth: number,
     direction: TraversalDirection,

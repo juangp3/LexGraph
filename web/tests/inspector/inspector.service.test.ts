@@ -10,18 +10,17 @@ describe('inspectorService', () => {
     const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({
-        word: 'father',
+        textOriginal: 'father',
         language: 'English',
-        meaning: 'A male parent.',
-        timeline: 'Proto-Indo-European -> Modern English',
-        sources: ['Etymonline'],
-        ancestry: [{ language: 'Proto-Indo-European', stage: '*ph2ter' }],
+        stage: 'Modern English',
+        meanings: [{ gloss: 'A male parent.' }],
+        sources: [{ title: 'Etymonline' }],
       }),
     } as Response);
 
     const result = await inspectorService.getWordDetails('father');
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/words/father');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/v1/words/father');
     expect(result.word).toBe('father');
     expect(result.meaning).toBe('A male parent.');
   });
@@ -30,18 +29,17 @@ describe('inspectorService', () => {
     const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({
-        word: 'cafe au lait',
+        textOriginal: 'cafe au lait',
         language: 'French',
-        meaning: 'Coffee with milk.',
-        timeline: 'French',
-        sources: ['Mock'],
-        ancestry: [{ language: 'French', stage: 'cafe au lait' }],
+        stage: 'French',
+        meanings: [{ gloss: 'Coffee with milk.' }],
+        sources: [{ title: 'Mock' }],
       }),
     } as Response);
 
     await inspectorService.getWordDetails('cafe au lait');
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/words/cafe%20au%20lait');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/v1/words/cafe%20au%20lait');
   });
 
   it('throws a useful error for non-200 API responses', async () => {

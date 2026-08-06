@@ -8,9 +8,11 @@ import type {
   SearchRepository,
   WordDetailsRepository
 } from "./repositories/interfaces.js";
+import graphRoutes from './routes/graph.routes.js';
 
 const UUID_V4_OR_V1_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 
 function parseDepth(raw: unknown): number | null {
   const parsed = Number(raw ?? 4);
@@ -40,20 +42,46 @@ interface AppDependencies {
   wordDetailsRepository?: WordDetailsRepository;
 }
 
+function parseAllowedOrigins(): string[] {
+  const single = process.env.FRONTEND_URL;
+  const multiple = process.env.FRONTEND_URLS;
+
+  const configured = [single, ...(multiple ? multiple.split(",") : [])]
+    .map((origin) => origin?.trim())
+    .filter((origin): origin is string => Boolean(origin));
+
+  if (configured.length > 0) {
+    return configured;
+  }
+
+  return ["http://localhost:3000", "http://127.0.0.1:3000"];
+}
+
 export function createApp(dependencies: AppDependencies = {}) {
   const app = express();
   const graphRepository = dependencies.graphRepository ?? new PgGraphRepository();
   const searchRepository = dependencies.searchRepository ?? new PgSearchRepository();
   const wordDetailsRepository = dependencies.wordDetailsRepository ?? new PgWordDetailsRepository();
+  const allowedOrigins = parseAllowedOrigins();
 
   app.use(cors({
-    origin: "http://localhost:3000"
+    origin: (origin, callback) => {
+      // Allow server-to-server and local tooling requests without Origin header.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, allowedOrigins.includes(origin));
+    }
   }));
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ ok: true, service: "lexgraph-api" });
   });
+
+  app.use('/v1/graph', graphRoutes);
 
   app.get("/v1/search", async (req, res) => {
     const q = String(req.query.q ?? "").trim();

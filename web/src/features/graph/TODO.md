@@ -1,0 +1,23 @@
+- I have updated the `graph.service.ts` to use the new `POST /v1/graph/query` endpoint.
+- I have updated the `useGraph.ts` hook to pass the `include` array to the `fetchGraphFlow` method.
+- I have updated the `GraphCanvas.tsx` component to use the new `useGraph` hook and to manage the `relationFilters` state.
+- I have updated the `LexGraph_Optimization_Plan.md` to mark the completed tasks.
+- I have created a `postJson` helper function to handle POST requests.
+- I have removed the `loadRelationOverlay` function as it is no longer needed.
+- I have updated the `expandDescendants` function to use the new `fetchGraphFlow` method.
+- I have updated the `mergedGraph` memo to remove the `overlayGraphs`.
+- I have updated the `filteredEdges` memo to use the `includedRelations` array.
+- I have updated the filter buttons to disable them when a relation is being loaded.
+- I have updated the `toggleFilter` function to simply toggle the filter state.
+- I have updated the initial state of the `relationFilters` to only include `ancestors`.
+- I have updated the `useGraph` hook to pass the `include` array to the `fetchGraphFlow` method.
+- I have updated the `GraphCanvas.tsx` component to use the new `useGraph` hook and to manage the `relationFilters` state.
+- I have updated the `LexGraph_Optimization_Plan.md` to mark the completed tasks.
+- I have created a `postJson` helper function to handle POST requests.
+- I have removed the `loadRelationOverlay` function as it is no longer needed.
+- I have updated the `expandDescendants` function to use the new `fetchGraphFlow` method.
+- I have updated the `mergedGraph` memo to remove the `overlayGraphs`.
+- I have updated the `filteredEdges` memo to use the `includedRelations` array.
+- I have updated the filter buttons to disable them when a relation is being loaded.
+- I have updated the `toggleFilter` function to simply toggle the filter state.
+- I have updated the initial state of the `relationFilters` to only include `ancestors`.

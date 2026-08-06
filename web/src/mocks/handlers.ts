@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
+// Development-only: MSW intercepts during `npm run dev`; removed in production build
 const WORD_IDS = {
   father: 'd694f27c-633c-44a9-a881-130b223b1120',
   mother: 'fca87886-e8f8-47e2-9baa-329c2f79ff47',

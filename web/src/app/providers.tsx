@@ -7,15 +7,26 @@ import { useEffect } from "react";
 const queryClient = new QueryClient();
 
 async function enableMocking() {
-  if (process.env.NODE_ENV !== "development") {
+  const isDev = process.env.NODE_ENV === "development";
+  const enableMsw = process.env.NEXT_PUBLIC_ENABLE_MSW === "true";
+
+  if (!isDev || !enableMsw) {
+    console.log("[LexGraph] Production mode: MSW disabled, using live backend only");
     return;
   }
 
+  console.log("[LexGraph] Development mode: MSW enabled for intercepting local requests");
   const { worker } = await import("@/mocks/browser");
 
-  // `worker.start()` returns a Promise that resolves
-  // once the Service Worker is up and running.
-  return worker.start({ onUnhandledRequest: "bypass" });
+  try {
+    await worker.start({ 
+      onUnhandledRequest: "bypass",  // Pass through unhandled requests to backend
+    });
+    console.log("[LexGraph] MSW successfully started");
+  } catch (error) {
+    console.warn("[LexGraph] MSW initialization failed:", error);
+    // In development, warn but continue - will call backend directly
+  }
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
