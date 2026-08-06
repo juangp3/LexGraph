@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGraph } from './useGraph';
 import { graphService, mergeFlowGraphs, type FlowGraph, type GraphMode } from './graph.service';
 import { useGraphStore } from './graph.store';
+import { useToast } from '@/components/ui/toast';
 
 const NODE_TYPES = {};
 const EDGE_TYPES = {};
@@ -38,6 +39,9 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
   const reactFlow = useReactFlow();
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
   const [showMiniMap, setShowMiniMap] = useState(true);
+  const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; nodeId?: string } | null>(null);
+  const [hoverInfo, setHoverInfo] = useState<{ visible: boolean; x: number; y: number; label?: string } | null>(null);
+  const showToast = useToast();
 
   useEffect(() => {
     resetRelationFilters();
@@ -49,6 +53,30 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     },
     [onSelectNode]
   );
+
+  const onNodeContextMenu = useCallback((e: React.MouseEvent, node: Node) => {
+    e.preventDefault();
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, nodeId: node.id });
+  }, []);
+
+  const onNodeMouseEnter = useCallback((e: React.MouseEvent, node: Node) => {
+    setHoverInfo({ visible: true, x: e.clientX + 8, y: e.clientY + 8, label: String(node.data?.label ?? node.id) });
+  }, []);
+
+  const onNodeMouseLeave = useCallback(() => {
+    setHoverInfo(null);
+  }, []);
+
+  const expandDescendantsFor = useCallback(async (nodeId: string) => {
+    if (!nodeId || expandedDescendantGraphs[nodeId]) return;
+    setIsExpandingDescendants(true);
+    try {
+      const graph = await graphService.fetchTraversalFlow('descendants', nodeId, 3);
+      setExpandedDescendantGraphs((prev) => ({ ...prev, [nodeId]: graph }));
+    } finally {
+      setIsExpandingDescendants(false);
+    }
+  }, [expandedDescendantGraphs]);
 
   const onNodeDoubleClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -99,16 +127,38 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     }
   }, [selectedNodeId, expandedDescendantGraphs]);
 
-  const expandDescendantsFor = useCallback(async (nodeId: string) => {
-    if (!nodeId || expandedDescendantGraphs[nodeId]) return;
-    setIsExpandingDescendants(true);
+  // URL sync: reflect selection and expanded nodes in query params, and restore from URL on mount
+  useEffect(() => {
+    // on mount, parse URL
     try {
-      const graph = await graphService.fetchTraversalFlow('descendants', nodeId, 3);
-      setExpandedDescendantGraphs((prev) => ({ ...prev, [nodeId]: graph }));
-    } finally {
-      setIsExpandingDescendants(false);
-    }
-  }, [expandedDescendantGraphs]);
+      const params = new URLSearchParams(window.location.search);
+      const sel = params.get('sel');
+      const expanded = params.get('expanded');
+      if (sel) {
+        // notify parent of selection
+        try { onSelectNode(sel, sel); } catch {}
+      }
+      if (expanded) {
+        const ids = expanded.split(',').filter(Boolean);
+        for (const id of ids) void expandDescendantsFor(id);
+      }
+    } catch {}
+    // update URL when selectedNodeId or expandedDescendantGraphs changes
+    return undefined;
+  // only run once on mount
+  }, []);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (selectedNodeId) params.set('sel', selectedNodeId); else params.delete('sel');
+      const expandedIds = Object.keys(expandedDescendantGraphs).join(',');
+      if (expandedIds) params.set('expanded', expandedIds); else params.delete('expanded');
+      const q = params.toString();
+      const url = `${window.location.pathname}${q ? `?${q}` : ''}`;
+      window.history.replaceState({}, '', url);
+    } catch {}
+  }, [selectedNodeId, expandedDescendantGraphs]);
 
   const collapseSelectedBranch = useCallback(() => {
     if (!selectedNodeId) return;
@@ -168,6 +218,8 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     return ids;
   }, [filteredEdges, rootWordId, selectedNodeId]);
 
+  
+
   const hiddenDescendants = useMemo(() => {
     if (!collapsedNodeIds.size) {
       return new Set<string>();
@@ -193,6 +245,51 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
 
     return hidden;
   }, [filteredEdges, collapsedNodeIds]);
+
+  // Pagination / clustering: limit visible nodes to avoid rendering extremely large graphs
+  const [visibleLimit, setVisibleLimit] = useState<number>(300);
+  const hasMoreNodes = mergedGraph.nodes.length > visibleLimit;
+
+  const paginatedVisibleNodes = useMemo(() => {
+    // if under limit, return computed visibleNodes list
+    const visible = mergedGraph.nodes.filter((n) => visibleNodeIds.has(n.id) && !hiddenDescendants.has(n.id));
+    if (visible.length <= visibleLimit) return visible;
+
+    // pick nodes by proximity to selectedNodeId or rootWordId (BFS on edges)
+    const start = selectedNodeId ?? rootWordId;
+    const graphAdj = new Map<string, string[]>();
+    for (const e of mergedGraph.edges) {
+      const arr = graphAdj.get(e.source) ?? [];
+      arr.push(e.target);
+      graphAdj.set(e.source, arr);
+    }
+
+    const queue = [start].filter(Boolean) as string[];
+    const picked = new Set<string>();
+    if (!queue.length) {
+      // fallback: pick first N visible nodes
+      for (let i = 0; i < visibleLimit; i++) picked.add(visible[i].id);
+      return visible.filter((n) => picked.has(n.id));
+    }
+
+    while (queue.length && picked.size < visibleLimit) {
+      const cur = queue.shift() as string;
+      if (!cur || picked.has(cur)) continue;
+      if (!visibleNodeIds.has(cur) || hiddenDescendants.has(cur)) continue;
+      picked.add(cur);
+      const neighbors = graphAdj.get(cur) ?? [];
+      for (const nb of neighbors) {
+        if (!picked.has(nb)) queue.push(nb);
+      }
+    }
+
+    // ensure selected + root included
+    if (selectedNodeId) picked.add(selectedNodeId);
+    if (rootWordId) picked.add(rootWordId);
+
+    const result = visible.filter((n) => picked.has(n.id));
+    return result;
+  }, [mergedGraph.nodes, mergedGraph.edges, visibleLimit, visibleNodeIds, hiddenDescendants, selectedNodeId, rootWordId]);
 
   const visibleEdges = useMemo(
     () =>
@@ -291,9 +388,63 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
   // Global keyboard handlers and custom events (center node, toggle minimap, focus search)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // arrow-key navigation: move selection between visible nodes
+      const moveSelection = (dir: 'left' | 'right' | 'up' | 'down') => {
+        try {
+          const nodes = reactFlow.getNodes();
+          if (!nodes || nodes.length === 0) return;
+          const candidates = nodes.filter((n) => visibleNodeIds.has(n.id) && !hiddenDescendants.has(n.id));
+          if (!candidates.length) return;
+          const current = candidates.find((n) => n.id === selectedNodeId) ?? candidates[0];
+          const cx = current.position?.x ?? 0;
+          const cy = current.position?.y ?? 0;
+          // score candidates by directionality and distance
+          let best: { node: typeof current; score: number } | null = null;
+          for (const c of candidates) {
+            if (c.id === current.id) continue;
+            const dx = (c.position?.x ?? 0) - cx;
+            const dy = (c.position?.y ?? 0) - cy;
+            // require roughly in the requested half-plane
+            const inDir =
+              (dir === 'left' && dx < 0) || (dir === 'right' && dx > 0) || (dir === 'up' && dy < 0) || (dir === 'down' && dy > 0);
+            if (!inDir) continue;
+            // score prefers primary axis distance and then orthogonal distance
+            const primary = Math.abs(dir === 'left' || dir === 'right' ? dx : dy);
+            const secondary = Math.abs(dir === 'left' || dir === 'right' ? dy : dx);
+            const score = primary * 2 + secondary;
+            if (!best || score < best.score) best = { node: c, score };
+          }
+          if (best) {
+            const target = best.node;
+            const all = reactFlow.getNodes();
+            reactFlow.setNodes(all.map((n) => ({ ...n, selected: n.id === target.id })));
+            try { onSelectNode(target.id, String(target.data?.label ?? target.id)); } catch {}
+            // center view on new selection
+            try {
+              (reactFlow as any).setCenter?.(target.position.x, target.position.y, { duration: 180 });
+            } catch {}
+          }
+        } catch {}
+      };
       if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         try { reactFlow.fitView({ padding: 0.2 }); } catch {}
+      }
+      if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        moveSelection('left');
+      }
+      if (e.key === 'ArrowRight' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        moveSelection('right');
+      }
+      if (e.key === 'ArrowUp' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        moveSelection('up');
+      }
+      if (e.key === 'ArrowDown' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        moveSelection('down');
       }
       if (e.key === 'Escape') {
         // clear selection
@@ -345,11 +496,15 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     window.addEventListener('lexgraph:centerSelection' as any, onCenterSelection as EventListener);
     window.addEventListener('lexgraph:toggleMiniMap' as any, onToggleMiniMap as EventListener);
 
+    const onGlobalClick = () => setContextMenu(null);
+    window.addEventListener('click', onGlobalClick);
+
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('lexgraph:centerNode' as any, onCenterNode as EventListener);
       window.removeEventListener('lexgraph:centerSelection' as any, onCenterSelection as EventListener);
       window.removeEventListener('lexgraph:toggleMiniMap' as any, onToggleMiniMap as EventListener);
+      window.removeEventListener('click', onGlobalClick);
     };
   }, [reactFlow, selectedNodeId, collapseSelectedBranch]);
 
@@ -466,7 +621,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
 
       <div ref={graphContainerRef} className="h-[420px] w-full md:h-[560px]">
         <ReactFlow
-          nodes={visibleNodes}
+          nodes={paginatedVisibleNodes}
           edges={visibleEdges.map((edge) => {
             const eid = `${edge.source}->${edge.target}`;
             const isPath = (pathEdgeIds as Set<string>).has(eid);
@@ -482,8 +637,11 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
           }) as Edge[]}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
-          onNodeClick={onNodeClick}
-          onNodeDoubleClick={onNodeDoubleClick}
+            onNodeClick={onNodeClick}
+            onNodeDoubleClick={onNodeDoubleClick}
+            onNodeContextMenu={onNodeContextMenu}
+            onNodeMouseEnter={onNodeMouseEnter}
+            onNodeMouseLeave={onNodeMouseLeave}
           fitView
           minZoom={0.2}
           maxZoom={1.8}
@@ -499,6 +657,84 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
           <Controls showFitView showZoom showInteractive />
         </ReactFlow>
       </div>
+      {hasMoreNodes && (
+        <div className="px-2 py-2">
+          <button
+            className="rounded-md border border-border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted"
+            onClick={() => setVisibleLimit((v) => v + 300)}
+          >
+            Show more nodes ({mergedGraph.nodes.length - paginatedVisibleNodes.length} hidden)
+          </button>
+        </div>
+      )}
+      {/* Context menu */}
+      {contextMenu?.visible && contextMenu.nodeId && (
+        <div
+          role="menu"
+          aria-label="Node context menu"
+          style={{ position: 'fixed', left: contextMenu.x, top: contextMenu.y, zIndex: 60 }}
+          className="rounded-md border bg-background p-2 shadow-md"
+        >
+          <button
+            className="block w-full text-left px-2 py-1 text-sm"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('lexgraph:centerNode', { detail: { nodeId: contextMenu.nodeId } }));
+              setContextMenu(null);
+            }}
+          >
+            Center Node
+          </button>
+          <button
+            className="block w-full text-left px-2 py-1 text-sm"
+            onClick={async () => {
+              await expandDescendantsFor(contextMenu.nodeId as string);
+              setContextMenu(null);
+            }}
+          >
+            Expand Descendants
+          </button>
+          <button
+            className="block w-full text-left px-2 py-1 text-sm"
+            onClick={() => {
+              if (contextMenu?.nodeId) {
+                try { onSelectNode(contextMenu.nodeId, String(contextMenu.nodeId)); } catch {}
+                showToast?.({ title: 'Inspector opened', description: 'Node selected in the inspector.' });
+              }
+              setContextMenu(null);
+            }}
+          >
+            Open in Inspector
+          </button>
+          <button
+            className="block w-full text-left px-2 py-1 text-sm"
+            onClick={() => {
+              try {
+                const params = new URLSearchParams(window.location.search);
+                if (contextMenu?.nodeId) params.set('sel', contextMenu.nodeId);
+                const expandedIds = Object.keys(expandedDescendantGraphs).join(',');
+                if (expandedIds) params.set('expanded', expandedIds); else params.delete('expanded');
+                const url = `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+                void navigator.clipboard.writeText(url);
+                showToast?.({ title: 'Copied link', description: 'Shareable workspace link copied to clipboard.' });
+              } catch {}
+              setContextMenu(null);
+            }}
+          >
+            Copy Node ID
+          </button>
+        </div>
+      )}
+
+      {/* Hover tooltip */}
+      {hoverInfo?.visible && hoverInfo.label && (
+        <div
+          role="tooltip"
+          style={{ position: 'fixed', left: hoverInfo.x, top: hoverInfo.y, zIndex: 50 }}
+          className="rounded px-2 py-1 text-xs bg-black text-white opacity-90"
+        >
+          {hoverInfo.label}
+        </div>
+      )}
       {!hasGraph && (
         <p className="px-2 py-2 text-sm text-muted-foreground">
           No graph edges available for current filters.
