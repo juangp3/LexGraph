@@ -14,6 +14,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useGraph } from './useGraph';
 import { graphService, mergeFlowGraphs, type FlowGraph, type GraphMode } from './graph.service';
+import { useGraphStore } from './graph.store';
 
 const NODE_TYPES = {};
 const EDGE_TYPES = {};
@@ -30,28 +31,18 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
   const [overlayGraphs, setOverlayGraphs] = useState<Partial<Record<GraphMode, FlowGraph>>>({});
   const [expandedDescendantGraphs, setExpandedDescendantGraphs] = useState<Record<string, FlowGraph>>({});
   const [collapsedNodeIds, setCollapsedNodeIds] = useState<Set<string>>(new Set());
-  const [relationFilters, setRelationFilters] = useState<Record<GraphMode, boolean>>({
-    ancestors: true,
-    descendants: true,
-    borrowings: true,
-    cognates: true,
-  });
   const [loadingRelationMode, setLoadingRelationMode] = useState<GraphMode | null>(null);
   const [isExpandingDescendants, setIsExpandingDescendants] = useState(false);
+  const { relationFilters, toggleFilter: toggleStoreFilter, resetRelationFilters } = useGraphStore();
   const reactFlow = useReactFlow();
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    resetRelationFilters();
     setOverlayGraphs({});
     setExpandedDescendantGraphs({});
     setCollapsedNodeIds(new Set());
-    setRelationFilters({
-      ancestors: true,
-      descendants: true,
-      borrowings: true,
-      cognates: true,
-    });
-  }, [rootWordId]);
+  }, [rootWordId, resetRelationFilters]);
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -78,13 +69,13 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
   const toggleFilter = useCallback(
     async (mode: GraphMode) => {
       const nextEnabled = !relationFilters[mode];
-      setRelationFilters((prev) => ({ ...prev, [mode]: nextEnabled }));
+      toggleStoreFilter(mode);
 
       if (nextEnabled && (mode === 'borrowings' || mode === 'cognates') && !overlayGraphs[mode]) {
         await loadRelationOverlay(mode);
       }
     },
-    [relationFilters, overlayGraphs, loadRelationOverlay]
+    [relationFilters, overlayGraphs, loadRelationOverlay, toggleStoreFilter]
   );
 
   const expandDescendants = useCallback(async () => {

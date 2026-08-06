@@ -9,20 +9,14 @@ interface InspectorPanelProps {
 const InspectorPanel: React.FC<InspectorPanelProps> = ({ word }) => {
   const { data, isLoading, isError } = useWordDetails(word);
 
-  if (isLoading) {
-    return <div className="rounded-xl border border-border/80 bg-card p-4">Loading metadata...</div>;
-  }
-
-  if (isError) {
-    return <div className="rounded-xl border border-destructive/50 bg-card p-4">Unable to fetch metadata.</div>;
-  }
-
-  if (!data) {
-    return <div className="rounded-xl border border-border/80 bg-card p-4">Select a node to inspect metadata.</div>;
-  }
-
   return (
     <section className="rounded-xl border border-border/80 bg-card p-4 shadow-sm" aria-label="Inspector panel">
+      {isLoading ? <div>Loading metadata...</div> : null}
+      {isError ? <div>Unable to fetch metadata.</div> : null}
+      {!isLoading && !isError && !data ? <div>Select a node to inspect metadata.</div> : null}
+
+      {data ? (
+        <>
       <Breadcrumb ancestry={data.ancestry} />
       <h2 className="mt-4 text-2xl font-semibold tracking-tight">{data.word}</h2>
       <p className="text-sm text-muted-foreground">{data.language}</p>
@@ -46,6 +40,8 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ word }) => {
           ))}
         </ul>
       </div>
+        </>
+      ) : null}
     </section>
   );
 };

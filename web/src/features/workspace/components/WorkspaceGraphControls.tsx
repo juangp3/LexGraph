@@ -1,20 +1,12 @@
 'use client';
 
-import {
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  Download,
-  RotateCcw,
-  MinusSquare,
-  PlusSquare,
-} from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, Download } from 'lucide-react';
 import { useReactFlow } from 'reactflow';
 import { Button } from '@/components/ui/button';
 import { toPng } from 'html-to-image';
 
 export function WorkspaceGraphControls() {
-  const { fitView, zoomIn, zoomOut, getNodes, getEdges } = useReactFlow();
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
 
   const handleDownload = async () => {
     const graphElement = document.querySelector<HTMLElement>('.react-flow');

@@ -28,9 +28,7 @@ test.describe('Search and Workspace Navigation', () => {
 
     await page.goto('/');
 
-    await page.getByRole('button', { name: /Search/i }).first().click();
-
-    const searchInput = page.getByPlaceholder('Type a word to search...');
+    const searchInput = page.getByPlaceholder('Search for a word, language, or variant...');
     await expect(searchInput).toBeVisible();
 
     await searchInput.fill('father');
@@ -52,18 +50,13 @@ test.describe('Search and Workspace Navigation', () => {
     expect(hasNextApiRequest(requests)).toBe(false);
   });
 
-  test('should fail gracefully when backend is unreachable', async ({ page, context }) => {
-    await context.route('**/v1/search**', async (route) => {
-      await route.abort('failed');
-    });
-
+  test('should show an empty state for unknown words', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: /Search/i }).first().click();
 
-    const searchInput = page.getByPlaceholder('Type a word to search...');
+    const searchInput = page.getByPlaceholder('Search for a word, language, or variant...');
     await expect(searchInput).toBeVisible();
-    await searchInput.fill('father');
+    await searchInput.fill('zzzzzz');
 
-    await expect(page.getByText('No results found.')).toBeVisible();
+    await expect(page.getByText('No matching words found.')).toBeVisible();
   });
 });

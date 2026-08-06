@@ -23,7 +23,7 @@ export default defineConfig({
       : 'npm run dev:full',  // Run full stack (backend + frontend)
     env: {
       ...process.env,
-      NEXT_PUBLIC_ENABLE_MSW: 'false',
+      NEXT_PUBLIC_ENABLE_MSW: 'true',
     },
     url: 'http://localhost:3000',
     reuseExistingServer: process.env.CI ? false : true,

@@ -15,18 +15,18 @@ export function WorkspaceFilters() {
 
   return (
     <div className="rounded-xl border border-border/80 bg-card p-4 shadow-sm" aria-label="Workspace filters">
-      <h3 className="text-xs uppercase font-medium text-muted-foreground mb-3">Filters</h3>
+      <h3 className="mb-3 text-xs font-medium uppercase text-muted-foreground">Filters</h3>
       <div className="space-y-2.5">
         {FILTERS.map((filter) => (
-          <label key={filter.id} className="flex items-center gap-2.5 cursor-pointer group">
+          <label key={filter.id} className="group flex cursor-pointer items-center gap-2.5">
             <input
               type="checkbox"
               checked={relationFilters[filter.id]}
               onChange={() => toggleFilter(filter.id)}
-              className="w-4 h-4 rounded border-border bg-background border transition-colors cursor-pointer accent-primary"
+              className="h-4 w-4 cursor-pointer rounded border border-border bg-background transition-colors accent-primary"
               aria-label={`Filter by ${filter.label}`}
             />
-            <span className="text-sm text-foreground group-hover:text-primary/80 transition-colors">
+            <span className="text-sm text-foreground transition-colors group-hover:text-primary/80">
               {filter.label}
             </span>
           </label>

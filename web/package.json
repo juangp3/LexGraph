@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
+    "dev:full": "cd .. && npm run dev:full",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

@@ -12,14 +12,7 @@ import {
 } from "@/components/ui/command";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-
-interface SearchResult {
-  wordId: string;
-  textOriginal: string;
-  language: string;
-}
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+import { searchWords, type SearchResult } from "@/features/search/search.service";
 
 export function CommandSearch() {
   const [open, setOpen] = React.useState(false);
@@ -40,12 +33,7 @@ export function CommandSearch() {
 
   const { data: searchResults = [] } = useQuery<SearchResult[]>({
     queryKey: ["search", query],
-    queryFn: async () => {
-      if (!query) return [];
-      const res = await fetch(`${API_BASE}/v1/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      return data.results;
-    },
+    queryFn: () => searchWords(query),
     enabled: !!query,
   });
 

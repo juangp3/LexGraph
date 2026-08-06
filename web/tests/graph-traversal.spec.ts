@@ -12,9 +12,8 @@ function hasNextApiRequest(urls: string[]): boolean {
 
 async function openWorkspaceFromSearch(page: Page) {
   await page.goto('/');
-  await page.getByRole('button', { name: /Search/i }).first().click();
 
-  const searchInput = page.getByPlaceholder('Type a word to search...');
+  const searchInput = page.getByPlaceholder('Search for a word, language, or variant...');
   await expect(searchInput).toBeVisible();
 
   await searchInput.fill('father');
