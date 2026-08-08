@@ -15,6 +15,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed:week2": "tsx scripts/seed-week2.ts",
     "import:data": "tsx scripts/import-week4.ts",
+    "seed:v2": "tsx scripts/seed-v2.ts",
     "resume:import": "tsx scripts/resume-import.ts",
     "report:import-status": "tsx scripts/report-import-status.ts",
     "infra:doctor": "docker context ls && docker context show && docker --context default version",
