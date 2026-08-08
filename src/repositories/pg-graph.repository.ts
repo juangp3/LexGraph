@@ -19,6 +19,8 @@ interface GraphQueryRow {
   method: "manual" | "imported" | "inferred";
   is_disputed: boolean;
   evidence_summary: string | null;
+  conflict_type: string | null;
+  conflict_details: string | null;
   depth: number;
   path: string[];
   sources: GraphEdgeSourceRef[] | null;
@@ -203,6 +205,8 @@ export class PgGraphRepository implements GraphRepository {
           e.method,
           e.is_disputed,
           e.evidence_summary,
+          e.conflict_type,
+          e.conflict_details,
           1 AS depth,
           ARRAY[e.from_word_id::text, e.to_word_id::text] AS path
         FROM etymology_edges e
@@ -220,6 +224,8 @@ export class PgGraphRepository implements GraphRepository {
           e.method,
           e.is_disputed,
           e.evidence_summary,
+          e.conflict_type,
+          e.conflict_details,
           walk.depth + 1 AS depth,
           walk.path || ${nextNodeExpr}::text AS path
         FROM etymology_edges e
@@ -261,6 +267,8 @@ export class PgGraphRepository implements GraphRepository {
         walk.method,
         walk.is_disputed,
         walk.evidence_summary,
+        walk.conflict_type,
+        walk.conflict_details,
         walk.depth,
         walk.path
       ORDER BY walk.depth ASC, walk.edge_id ASC
@@ -278,6 +286,8 @@ export class PgGraphRepository implements GraphRepository {
       method: row.method,
       isDisputed: row.is_disputed,
       evidenceSummary: row.evidence_summary,
+      conflictType: row.conflict_type,
+      conflictDetails: row.conflict_details,
       depth: row.depth,
       path: row.path,
       sources: (row.sources ?? []) as GraphEdgeSourceRef[]

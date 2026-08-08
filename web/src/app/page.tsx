@@ -44,7 +44,7 @@ export default function Home() {
             <WorkspaceSearch
               mode="hero"
               autoFocus
-              placeholder="Search for a word, language, or variant..."
+              placeholder="Search words, languages, roots, or meanings..."
             />
 
             <div className="flex flex-wrap gap-3">

@@ -1,4 +1,9 @@
 # LexGraph
+
+## Import pipeline documentation
+
+See [docs/import-pipeline-usage.md](docs/import-pipeline-usage.md) for a practical guide to running the importer, checking job status, and resuming failed runs.
+
 # Database Architecture
 
 Instead of Neo4j, use PostgreSQL as the primary database with the Apache AGE extension for graph capabilities.

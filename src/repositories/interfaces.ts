@@ -25,6 +25,8 @@ export interface GraphEdgeInput {
   confidence: number;
   method: "manual" | "imported" | "inferred";
   evidenceSummary?: string;
+  conflictType?: string | null;
+  conflictDetails?: string | null;
   isDisputed?: boolean;
   createdBy?: string;
   sources?: Array<{
@@ -51,6 +53,8 @@ export interface GraphTraversalEdge {
   method: "manual" | "imported" | "inferred";
   isDisputed: boolean;
   evidenceSummary: string | null;
+  conflictType: string | null;
+  conflictDetails: string | null;
   depth: number;
   path: string[];
   sources: GraphEdgeSourceRef[];
@@ -64,17 +68,40 @@ export interface GraphRepository {
   findCognates(wordId: string, depth: number): Promise<GraphTraversalEdge[]>;
 }
 
+export type SearchEntityType = "word" | "language" | "family" | "root";
+
+export type SearchMatchType =
+  | "exact"
+  | "prefix"
+  | "substring"
+  | "fuzzy"
+  | "meaning"
+  | "historical"
+  | "root"
+  | "language"
+  | "family";
+
 export interface SearchCandidate {
   wordId: string;
   textOriginal: string;
   textNormalized: string;
   language: string;
+  languageFamily: string | null;
   stage: string | null;
   score: number;
+  type: SearchEntityType;
+  matchType: SearchMatchType;
+  isReconstructed: boolean;
+}
+
+export interface SearchFilters {
+  language?: string;
+  family?: string;
+  type?: SearchEntityType;
 }
 
 export interface SearchRepository {
-  searchCandidates(query: string, languageFilter?: string, limit?: number): Promise<SearchCandidate[]>;
+  searchCandidates(query: string, filters?: SearchFilters, limit?: number): Promise<SearchCandidate[]>;
   rankCandidates(candidates: SearchCandidate[], query: string): Promise<SearchCandidate[]>;
 }
 

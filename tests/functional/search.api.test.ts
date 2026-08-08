@@ -12,8 +12,12 @@ describe("GET /v1/search", () => {
           textOriginal: "father",
           textNormalized: "father",
           language: "English",
+          languageFamily: "Germanic",
           stage: "Modern English",
-          score: 1
+          score: 1,
+          type: "word",
+          matchType: "exact",
+          isReconstructed: false,
         }
       ],
       rankCandidates: async (candidates) => candidates
@@ -24,9 +28,9 @@ describe("GET /v1/search", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.query).toBe("father");
-    expect(response.body.total).toBe(1);
+    expect(response.body.metadata.total).toBe(1);
     expect(Array.isArray(response.body.results)).toBe(true);
-    expect(response.body.results[0].textOriginal).toBe("father");
+    expect(response.body.results[0].text).toBe("father");
   });
 
   it("returns 400 when query is missing", async () => {

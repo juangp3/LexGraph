@@ -61,7 +61,7 @@ describe("integration: search repository", () => {
       return;
     }
 
-    const candidates = await searchRepository.searchCandidates("father", languageName, 10);
+    const candidates = await searchRepository.searchCandidates("father", { language: languageName }, 10);
     const ranked = await searchRepository.rankCandidates(candidates, "father");
 
     expect(ranked.length).toBeGreaterThan(0);
@@ -74,7 +74,7 @@ describe("integration: search repository", () => {
       return;
     }
 
-    const candidates = await searchRepository.searchCandidates("fader", languageName, 10);
+    const candidates = await searchRepository.searchCandidates("fader", { language: languageName }, 10);
     expect(candidates.length).toBeGreaterThan(0);
     expect(candidates.some((candidate) => candidate.textOriginal === "faeder")).toBe(true);
   });
@@ -85,7 +85,7 @@ describe("integration: search repository", () => {
       return;
     }
 
-    const candidates = await searchRepository.searchCandidates("father", languageName, 10);
+    const candidates = await searchRepository.searchCandidates("father", { language: languageName }, 10);
     expect(candidates.every((candidate) => candidate.language === languageName)).toBe(true);
   });
 });

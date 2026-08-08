@@ -29,7 +29,7 @@ If Docker shows a named-pipe error on Windows, start Docker Desktop first. If th
 
 ## Week 4 Import Commands
 
-- `npm run import:week4`
+- `npm run import:data`
 
 ## Scope By Suite
 
@@ -47,7 +47,7 @@ If Docker shows a named-pipe error on Windows, start Docker Desktop first. If th
 3. Apply schema: `npm run db:migrate`.
 4. Seed deterministic fixture: `npm run db:seed:week2`.
 5. Run `npm run test:fast`.
-6. Run `npm run import:week4`.
+6. Run `npm run import:data`.
 7. Run integration tests:
    - PowerShell: `$env:RUN_INTEGRATION='true'; npm run test:integration; Remove-Item Env:RUN_INTEGRATION`
    - Bash: `RUN_INTEGRATION=true npm run test:integration`

@@ -14,7 +14,9 @@
     "stop:full": "npm run infra:down",
     "db:migrate": "prisma migrate deploy",
     "db:seed:week2": "tsx scripts/seed-week2.ts",
-    "import:week4": "tsx scripts/import-week4.ts",
+    "import:data": "tsx scripts/import-week4.ts",
+    "resume:import": "tsx scripts/resume-import.ts",
+    "report:import-status": "tsx scripts/report-import-status.ts",
     "infra:doctor": "docker context ls && docker context show && docker --context default version",
     "infra:up": "docker compose up -d postgres apache-age redis",
     "infra:down": "docker compose down",
@@ -33,14 +35,14 @@
     "test:performance": "npm run test:performance:search && npm run test:performance:traversal",
     "test:fast": "npm run test:unit && npm run test:component && npm run test:functional",
     "test:all": "npm run test:fast && npm run test:integration && npm run test:system",
-    "integrity:check": "tsx scripts/check-integrity.ts"
-    ,
+    "integrity:check": "tsx scripts/check-integrity.ts",
     "perf:graph": "npx tsx scripts/perf/run-graph-perf.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",
     "cors": "^2.8.6",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.6.2",
     "pg": "^8.13.1"
   },
   "devDependencies": {

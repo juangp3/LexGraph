@@ -58,6 +58,41 @@ model Source {
   @@map("sources")
 }
 
+model ImportJob {
+  id               String           @id @default(uuid()) @db.Uuid
+  sourceName       String?          @map("source_name")
+  status           String           @default("QUEUED")
+  rejectionLogPath String?          @map("rejection_log_path")
+  processedCount   Int              @default(0) @map("processed_count")
+  acceptedCount    Int              @default(0) @map("accepted_count")
+  rejectedCount    Int              @default(0) @map("rejected_count")
+  upsertedWords    Int              @default(0) @map("upserted_words")
+  upsertedEdges    Int              @default(0) @map("upserted_edges")
+  summary          Json?            @db.JsonB
+  startedAt        DateTime?        @map("started_at") @db.Timestamptz(6)
+  completedAt      DateTime?        @map("completed_at") @db.Timestamptz(6)
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  rawImportRecords RawImportRecord[]
+
+  @@index([status])
+  @@map("import_jobs")
+}
+
+model RawImportRecord {
+  id          String     @id @default(uuid()) @db.Uuid
+  jobId       String     @map("job_id") @db.Uuid
+  job         ImportJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  sourceKey   String     @map("source_key")
+  sourceHash  String     @map("source_hash")
+  payload     Json       @db.JsonB
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([jobId])
+  @@index([sourceHash])
+  @@map("raw_import_records")
+}
+
 model Word {
   id                   String       @id @default(uuid()) @db.Uuid
   languageId           String       @map("language_id") @db.Uuid
@@ -99,15 +134,18 @@ model Meaning {
 }
 
 model WordSource {
-  id           String   @id @default(uuid()) @db.Uuid
-  wordId       String   @map("word_id") @db.Uuid
-  sourceId     String   @map("source_id") @db.Uuid
-  word         Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
-  source       Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  sourceLocator String? @map("source_locator")
-  extractedBy  String?  @map("extracted_by")
-  confidence   Decimal  @default(1.00) @db.Decimal(3, 2)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id              String   @id @default(uuid()) @db.Uuid
+  wordId          String   @map("word_id") @db.Uuid
+  sourceId        String   @map("source_id") @db.Uuid
+  word            Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  source          Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceLocator   String?  @map("source_locator")
+  extractedBy     String?  @map("extracted_by")
+  confidence      Decimal  @default(1.00) @db.Decimal(3, 2)
+  evidenceSummary String?  @map("evidence_summary")
+  conflictType    String?  @map("conflict_type")
+  conflictDetails String?  @map("conflict_details")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([sourceId])
   @@unique([wordId, sourceId, sourceLocator], map: "uq_word_sources_prisma_compat")
@@ -115,20 +153,22 @@ model WordSource {
 }
 
 model EtymologyEdge {
-  id              String      @id @default(uuid()) @db.Uuid
-  fromWordId      String      @map("from_word_id") @db.Uuid
-  toWordId        String      @map("to_word_id") @db.Uuid
-  relationType    String      @map("relation_type")
-  confidence      Decimal     @db.Decimal(3, 2)
-  evidenceSummary String?     @map("evidence_summary")
-  method          String
-  isDisputed      Boolean     @default(false) @map("is_disputed")
-  createdBy       String?     @map("created_by")
-  fromWord        Word        @relation("OutgoingWordEdges", fields: [fromWordId], references: [id], onDelete: Cascade)
-  toWord          Word        @relation("IncomingWordEdges", fields: [toWordId], references: [id], onDelete: Cascade)
-  edgeSources     EdgeSource[]
-  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id               String      @id @default(uuid()) @db.Uuid
+  fromWordId       String      @map("from_word_id") @db.Uuid
+  toWordId         String      @map("to_word_id") @db.Uuid
+  relationType     String      @map("relation_type")
+  confidence       Decimal     @db.Decimal(3, 2)
+  evidenceSummary  String?     @map("evidence_summary")
+  method           String
+  isDisputed       Boolean     @default(false) @map("is_disputed")
+  createdBy        String?     @map("created_by")
+  conflictType     String?     @map("conflict_type")
+  conflictDetails  String?     @map("conflict_details")
+  fromWord         Word        @relation("OutgoingWordEdges", fields: [fromWordId], references: [id], onDelete: Cascade)
+  toWord           Word        @relation("IncomingWordEdges", fields: [toWordId], references: [id], onDelete: Cascade)
+  edgeSources      EdgeSource[]
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   @@unique([fromWordId, toWordId, relationType], map: "uq_etymology_edges_from_to_type")
   @@index([toWordId, relationType])

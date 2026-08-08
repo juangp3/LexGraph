@@ -81,6 +81,8 @@ describe("integration: graph repository", () => {
       confidence: 0.90,
       method: "imported",
       evidenceSummary: "Historical reconstruction",
+      conflictType: "conflicting-value",
+      conflictDetails: "meaning changed from \"male parent\" to \"female parent\"",
       sources: [{
         sourceId,
         sourceLocator: "entry-2",
@@ -148,6 +150,20 @@ describe("integration: graph repository", () => {
       const uniquePathNodes = new Set(edge.path);
       expect(uniquePathNodes.size).toBe(edge.path.length);
     }
+  });
+
+  it("returns persisted conflict metadata on graph edges", async () => {
+    if (!shouldRun) {
+      expect(true).toBe(true);
+      return;
+    }
+
+    const edges = await repository.findAncestors(rootWordId, 4);
+    const conflictEdge = edges.find((edge) => edge.conflictType === "conflicting-value");
+
+    expect(conflictEdge).toBeDefined();
+    expect(conflictEdge?.conflictType).toBe("conflicting-value");
+    expect(conflictEdge?.conflictDetails).toContain("female parent");
   });
 
   it("filters specialized traversals by relation type", async () => {

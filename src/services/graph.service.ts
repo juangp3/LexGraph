@@ -22,10 +22,13 @@ export class GraphService {
       graph: results,
       metadata: {
         query,
+        provenanceEnabled: true,
       },
       viewport: {},
       statistics: {
         edgeCount: results.length,
+        disputedEdges: results.filter((edge) => edge.isDisputed).length,
+        lowConfidenceEdges: results.filter((edge) => edge.confidence < 0.8).length,
       },
     };
   }

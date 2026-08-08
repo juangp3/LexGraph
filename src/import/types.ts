@@ -37,6 +37,8 @@ export interface NormalizedImportRecord {
   relatedWordAsciiFolded: string | null;
   relatedLanguage: string | null;
   relatedStage: string | null;
+  conflictType?: "exact-match" | "partial-match" | "conflicting-value";
+  conflictDetails?: string;
 }
 
 export interface ImportRejection {
@@ -47,10 +49,16 @@ export interface ImportRejection {
 }
 
 export interface ImportRunResult {
+  jobId: string;
   processed: number;
   accepted: number;
   rejected: number;
   upsertedWords: number;
   upsertedEdges: number;
   rejectionLogPath: string;
+}
+
+export interface RawRecordStagingInput {
+  payload: Record<string, unknown>;
+  sourceKey: string;
 }

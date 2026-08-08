@@ -50,7 +50,7 @@ function Workspace() {
         </header>
 
         <div className="col-span-2 border-b border-border/60 px-4 py-4 lg:px-6">
-          <WorkspaceSearch navigationMode="replace" placeholder="Search the workspace..." />
+          <WorkspaceSearch navigationMode="replace" placeholder="Search words, languages, roots, or meanings..." />
           <div className="mt-3">
             <WorkspaceBreadcrumb />
           </div>

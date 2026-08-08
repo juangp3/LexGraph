@@ -1,17 +1,26 @@
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import { PgGraphRepository } from "./repositories/pg-graph.repository.js";
 import { PgSearchRepository } from "./repositories/pg-search.repository.js";
 import { PgWordDetailsRepository } from "./repositories/pg-word-details.repository.js";
 import type {
   GraphRepository,
+  SearchEntityType,
   SearchRepository,
   WordDetailsRepository
 } from "./repositories/interfaces.js";
 import graphRoutes from './routes/graph.routes.js';
+import { dbPool } from './db/client.js';
+import { getLatestImportJob, getRecentImportFailures } from './import/job-store.js';
 
 const UUID_V4_OR_V1_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const VALID_ENTITY_TYPES = new Set<string>(["word", "language", "family", "root"]);
+const MAX_SEARCH_QUERY_LENGTH = 200;
+const DEFAULT_SEARCH_LIMIT = 10;
+const MAX_SEARCH_LIMIT = 50;
 
 
 function parseDepth(raw: unknown): number | null {
@@ -75,7 +84,15 @@ export function createApp(dependencies: AppDependencies = {}) {
       callback(null, allowedOrigins.includes(origin));
     }
   }));
-  app.use(express.json());
+  app.use(express.json({ limit: "1mb" }));
+
+  const searchRateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many search requests. Please slow down." },
+  });
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ ok: true, service: "lexgraph-api" });
@@ -83,24 +100,82 @@ export function createApp(dependencies: AppDependencies = {}) {
 
   app.use('/v1/graph', graphRoutes);
 
-  app.get("/v1/search", async (req, res) => {
+  app.get("/v1/import-status", async (_req, res) => {
+    try {
+      const client = await dbPool.connect();
+      try {
+        const latest = await getLatestImportJob(client);
+        const failures = await getRecentImportFailures(client, 5);
+        return res.status(200).json({ latest, failures });
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to load import status", error: String(error) });
+    }
+  });
+
+  app.get("/v1/search", searchRateLimiter, async (req, res) => {
     const q = String(req.query.q ?? "").trim();
-    const language = typeof req.query.language === "string" ? req.query.language : undefined;
-    const limit = Number(req.query.limit ?? 10);
+    const language = typeof req.query.language === "string" ? req.query.language.trim() : undefined;
+    const family = typeof req.query.family === "string" ? req.query.family.trim() : undefined;
+    const typeRaw = typeof req.query.type === "string" ? req.query.type.trim() : undefined;
+    const rawLimit = Number(req.query.limit ?? DEFAULT_SEARCH_LIMIT);
 
     if (!q) {
       return res.status(400).json({ message: "Query q is required" });
     }
 
+    if (q.length > MAX_SEARCH_QUERY_LENGTH) {
+      return res.status(400).json({
+        message: `Query exceeds maximum length of ${MAX_SEARCH_QUERY_LENGTH} characters`,
+      });
+    }
+
+    if (typeRaw && !VALID_ENTITY_TYPES.has(typeRaw)) {
+      return res.status(400).json({
+        message: `Invalid type. Use one of: ${[...VALID_ENTITY_TYPES].join(", ")}`,
+      });
+    }
+
+    const limit = Number.isFinite(rawLimit)
+      ? Math.max(1, Math.min(rawLimit, MAX_SEARCH_LIMIT))
+      : DEFAULT_SEARCH_LIMIT;
+
+    const start = Date.now();
+
     try {
-      const candidates = await searchRepository.searchCandidates(q, language, limit);
+      const candidates = await searchRepository.searchCandidates(q, {
+        language,
+        family,
+        type: typeRaw as SearchEntityType | undefined,
+      }, limit);
       const ranked = await searchRepository.rankCandidates(candidates, q);
 
       return res.status(200).json({
         query: q,
-        language: language ?? null,
-        total: ranked.length,
-        results: ranked
+        filters: {
+          language: language ?? null,
+          family: family ?? null,
+          type: typeRaw ?? null,
+        },
+        results: ranked.map((r) => ({
+          id: r.wordId,
+          type: r.type,
+          text: r.textOriginal,
+          language: r.language || null,
+          languageFamily: r.languageFamily,
+          stage: r.stage,
+          isReconstructed: r.isReconstructed,
+          match: {
+            type: r.matchType,
+            score: r.score,
+          },
+        })),
+        metadata: {
+          total: ranked.length,
+          executionTimeMs: Date.now() - start,
+        },
       });
     } catch (error) {
       return res.status(500).json({ message: "Failed to run search", error: String(error) });
