@@ -1,58 +1,105 @@
-# name: Nightly Quality Gate
+name: Nightly Quality Gate
 
-# on:
-#   schedule:
-#     - cron: "0 3 * * *"
-#   workflow_dispatch:
+on:
+  workflow_dispatch:
 
-# jobs:
-#   nightly:
-#     runs-on: ubuntu-latest
-#     services:
-#       postgres:
-#         image: postgres:17
-#         env:
-#           POSTGRES_DB: lexgraph
-#           POSTGRES_USER: lexgraph
-#           POSTGRES_PASSWORD: lexgraph
-#         ports:
-#           - 5432:5432
-#         options: >-
-#           --health-cmd "pg_isready -U lexgraph -d lexgraph"
-#           --health-interval 10s
-#           --health-timeout 5s
-#           --health-retries 5
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: lexgraph
+          POSTGRES_USER: lexgraph
+          POSTGRES_PASSWORD: lexgraph
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lexgraph -d lexgraph"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-#       - name: Setup Node
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: 20
-#           cache: npm
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
-#       - name: Install dependencies
-#         run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-#       - name: Apply migrations
-#         env:
-#           DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
-#         run: npm run db:migrate
+      - name: Install PostgreSQL client tools
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-#       - name: Fast tests
-#         run: npm run test:fast
+      - name: Apply migrations
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+        run: npm run db:migrate
 
-#       - name: Integration tests
-#         env:
-#           RUN_INTEGRATION: "true"
-#           DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
-#         run: npm run test:integration
+      - name: Fast tests
+        run: npm run test:fast
 
-#       - name: Data integrity checks
-#         env:
-#           DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
-#         run: npm run integrity:check
+      - name: Integration tests
+        env:
+          RUN_INTEGRATION: "true"
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+        run: npm run test:integration
 
-#       - name: System smoke tests
-#         run: npm run test:system
+      - name: Data integrity checks
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+        run: npm run integrity:check
+
+      - name: Build API
+        run: npm run build
+
+      - name: Start API server
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+          PORT: 3001
+        run: |
+          node dist/server.js > /tmp/lexgraph-api.log 2>&1 &
+          echo $! > /tmp/lexgraph-api.pid
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:3001/health >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API failed to start"
+          cat /tmp/lexgraph-api.log || true
+          exit 1
+
+      - name: API performance baseline check
+        env:
+          BENCH_BASE_URL: http://localhost:3001
+          PERF_BASELINE_PATH: tests/performance/baseline-api.json
+          MAX_REGRESSION_PCT: 25
+        run: npm run perf:ci
+
+      - name: Backup and restore drill
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+        run: npm run db:restore:drill
+
+      - name: Frontend graph layout benchmark
+        run: npm run perf:graph
+
+      - name: System smoke tests
+        run: npm run test:system
+
+      - name: Print API log on failure
+        if: failure()
+        run: cat /tmp/lexgraph-api.log || true
+
+      - name: Stop API server
+        if: always()
+        run: kill "$(cat /tmp/lexgraph-api.pid)" || true

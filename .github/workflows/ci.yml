@@ -94,3 +94,76 @@ jobs:
 
       - name: System smoke tests
         run: npm run test:system
+
+  performance-regression:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: lexgraph
+          POSTGRES_USER: lexgraph
+          POSTGRES_PASSWORD: lexgraph
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lexgraph -d lexgraph"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+        run: npm run db:migrate
+
+      - name: Build API
+        run: npm run build
+
+      - name: Start API server
+        env:
+          DATABASE_URL: postgresql://lexgraph:lexgraph@localhost:5432/lexgraph
+          PORT: 3001
+        run: |
+          node dist/server.js > /tmp/lexgraph-api.log 2>&1 &
+          echo $! > /tmp/lexgraph-api.pid
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:3001/health >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API failed to start"
+          cat /tmp/lexgraph-api.log || true
+          exit 1
+
+      - name: Run performance regression checks
+        env:
+          BENCH_BASE_URL: http://localhost:3001
+          PERF_BASELINE_PATH: tests/performance/baseline-api.json
+          MAX_REGRESSION_PCT: 20
+        run: npm run perf:ci
+
+      - name: Print API log on failure
+        if: failure()
+        run: cat /tmp/lexgraph-api.log || true
+
+      - name: Stop API server
+        if: always()
+        run: kill "$(cat /tmp/lexgraph-api.pid)" || true
