@@ -14,9 +14,13 @@ export interface FlowGraph {
 }
 
 interface SearchResult {
-  wordId: string;
-  textOriginal: string;
-  language: string;
+  /** Phase 5 API field */
+  id: string;
+  text: string;
+  language: string | null;
+  // legacy compat aliases populated by normalizeResult in search.service
+  wordId?: string;
+  textOriginal?: string;
 }
 
 interface SearchResponse {
@@ -260,13 +264,14 @@ class GraphService {
     if ((response.edges?.length ?? 0) === 0 && fallbackWord) {
       const candidates = await this.searchWordCandidates(fallbackWord);
       for (const candidate of candidates) {
-        if (candidate.wordId === resolvedRootWordId) {
+        const candidateId = candidate.id ?? candidate.wordId ?? '';
+        if (!candidateId || candidateId === resolvedRootWordId) {
           continue;
         }
 
-        const candidateResponse = await this.fetchTraversal('ancestors', candidate.wordId, depth);
+        const candidateResponse = await this.fetchTraversal('ancestors', candidateId, depth);
         if ((candidateResponse.edges?.length ?? 0) > 0) {
-          resolvedRootWordId = candidate.wordId;
+          resolvedRootWordId = candidateId;
           response = candidateResponse;
           break;
         }

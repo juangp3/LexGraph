@@ -11,7 +11,7 @@ interface InspectorPanelProps {
 }
 
 const InspectorPanel: React.FC<InspectorPanelProps> = ({ word, wordId }) => {
-  const { data, isLoading, isError } = useWordDetails(word);
+  const { data, isLoading, isError } = useWordDetails(wordId);
   const showToast = useToast();
 
   const handleCopyLink = async () => {

@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import { LaptopMinimal, MoonStar, SunMedium } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { type ThemeMode, useTheme } from "./ThemeProvider";
@@ -18,6 +19,43 @@ const OPTIONS: Array<{
 
 export function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Render a stable placeholder during SSR / before hydration to avoid
+  // aria-pressed mismatch (theme is read from localStorage on client only).
+  if (!mounted) {
+    return (
+      <div
+        className="inline-flex items-center rounded-[var(--radius-xl)] border border-border/70 bg-background/80 p-1 shadow-[var(--shadow-flat)] backdrop-blur"
+        role="group"
+        aria-label="Theme switcher"
+        aria-hidden="true"
+      >
+        {OPTIONS.map((option) => {
+          const Icon = option.icon;
+          return (
+            <Button
+              key={option.mode}
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              aria-pressed={false}
+              aria-label={option.label}
+              title={option.label}
+              className="rounded-[calc(var(--radius-xl)-0.35rem)]"
+              tabIndex={-1}
+            >
+              <Icon className="h-4 w-4" />
+            </Button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div

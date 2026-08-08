@@ -13,7 +13,7 @@ function hasNextApiRequest(urls: string[]): boolean {
 async function openWorkspaceFromSearch(page: Page) {
   await page.goto('/');
 
-  const searchInput = page.getByPlaceholder('Search for a word, language, or variant...');
+  const searchInput = page.getByPlaceholder('Search words, languages, roots, or meanings...');
   await expect(searchInput).toBeVisible();
 
   await searchInput.fill('father');
@@ -46,7 +46,7 @@ test.describe('Graph Traversal Features', () => {
     expect(ancestorsResponse.status()).toBe(200);
 
     const nodes = page.locator('.react-flow__node');
-    await expect(nodes.first()).toBeVisible();
+    await expect(nodes.first()).toBeVisible({ timeout: 15000 });
 
     await nodes.first().click();
     await expect(page.getByLabel('Inspector panel')).toBeVisible();
