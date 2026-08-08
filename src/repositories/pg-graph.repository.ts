@@ -3,6 +3,7 @@ import type {
   GraphEdgeInput,
   GraphEdgeSourceRef,
   GraphRepository,
+  GraphRelationship,
   GraphTraversalEdge
 } from "./interfaces.js";
 
@@ -129,6 +130,49 @@ export class PgGraphRepository implements GraphRepository {
 
   async findCognates(wordId: string, depth: number): Promise<GraphTraversalEdge[]> {
     return this.privateTraverse(wordId, depth, "ancestors", "COGNATE_WITH");
+  }
+
+  async findRelationships(wordId: string, options?: { limit?: number; cursor?: string }): Promise<GraphRelationship[]> {
+    const limit = Math.min(Math.max(options?.limit ?? 25, 1), 100);
+    const rows = await dbPool.query<GraphQueryRow>(
+      `
+      SELECT
+        e.id AS edge_id,
+        e.from_word_id,
+        e.to_word_id,
+        e.relation_type,
+        e.confidence::text,
+        e.method,
+        e.is_disputed,
+        e.evidence_summary,
+        e.conflict_type,
+        e.conflict_details,
+        1 AS depth,
+        ARRAY[e.from_word_id::text, e.to_word_id::text] AS path
+      FROM etymology_edges e
+      WHERE e.from_word_id = $1 OR e.to_word_id = $1
+      ORDER BY e.created_at DESC
+      LIMIT $2
+      `,
+      [wordId, limit]
+    );
+
+    return rows.rows.map((row) => ({
+      edgeId: row.edge_id,
+      fromWordId: row.from_word_id,
+      toWordId: row.to_word_id,
+      relationType: row.relation_type,
+      confidence: Number(row.confidence),
+      method: row.method,
+      isDisputed: row.is_disputed,
+      evidenceSummary: row.evidence_summary,
+      conflictType: row.conflict_type,
+      conflictDetails: row.conflict_details,
+      depth: row.depth,
+      path: row.path,
+      sources: [],
+      direction: row.from_word_id === wordId ? "outgoing" : "incoming",
+    }));
   }
 
   async traverse(

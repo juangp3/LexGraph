@@ -77,8 +77,7 @@ const graphRepository: GraphRepository = {
       path: [wordId, "66666666-6666-6666-8666-666666666666"],
       sources: [],
     },
-  ],
-};
+  ],  findRelationships: async () => [],};
 
 const searchRepository: SearchRepository = {
   searchCandidates: async () => [

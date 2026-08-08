@@ -74,6 +74,7 @@ const graphRepository: GraphRepository = {
       sources: [],
     },
   ],
+  findRelationships: async () => [],
 };
 
 describe("graph endpoint validation", () => {

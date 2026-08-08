@@ -53,11 +53,15 @@ export interface GraphTraversalEdge {
   method: "manual" | "imported" | "inferred";
   isDisputed: boolean;
   evidenceSummary: string | null;
-  conflictType: string | null;
-  conflictDetails: string | null;
+  conflictType?: string | null;
+  conflictDetails?: string | null;
   depth: number;
   path: string[];
   sources: GraphEdgeSourceRef[];
+}
+
+export interface GraphRelationship extends GraphTraversalEdge {
+  direction: "incoming" | "outgoing";
 }
 
 export interface GraphRepository {
@@ -66,6 +70,7 @@ export interface GraphRepository {
   findDescendants(wordId: string, depth: number): Promise<GraphTraversalEdge[]>;
   findBorrowings(wordId: string, depth: number): Promise<GraphTraversalEdge[]>;
   findCognates(wordId: string, depth: number): Promise<GraphTraversalEdge[]>;
+  findRelationships(wordId: string, options?: { limit?: number; cursor?: string }): Promise<GraphRelationship[]>;
 }
 
 export type SearchEntityType = "word" | "language" | "family" | "root";

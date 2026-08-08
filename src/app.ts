@@ -10,6 +10,7 @@ import type {
   SearchRepository,
   WordDetailsRepository
 } from "./repositories/interfaces.js";
+import { GraphService } from "./services/graph.service.js";
 import graphRoutes from './routes/graph.routes.js';
 import { dbPool } from './db/client.js';
 import { getLatestImportJob, getRecentImportFailures } from './import/job-store.js';
@@ -21,6 +22,7 @@ const VALID_ENTITY_TYPES = new Set<string>(["word", "language", "family", "root"
 const MAX_SEARCH_QUERY_LENGTH = 200;
 const DEFAULT_SEARCH_LIMIT = 10;
 const MAX_SEARCH_LIMIT = 50;
+const MAX_REQUEST_SIZE_BYTES = 1024 * 1024;
 
 
 function parseDepth(raw: unknown): number | null {
@@ -71,6 +73,7 @@ export function createApp(dependencies: AppDependencies = {}) {
   const graphRepository = dependencies.graphRepository ?? new PgGraphRepository();
   const searchRepository = dependencies.searchRepository ?? new PgSearchRepository();
   const wordDetailsRepository = dependencies.wordDetailsRepository ?? new PgWordDetailsRepository();
+  const graphService = new GraphService(graphRepository);
   const allowedOrigins = parseAllowedOrigins();
 
   app.use(cors({
@@ -84,7 +87,62 @@ export function createApp(dependencies: AppDependencies = {}) {
       callback(null, allowedOrigins.includes(origin));
     }
   }));
-  app.use(express.json({ limit: "1mb" }));
+  app.use((req, _res, next) => {
+    const requestId = String(req.headers["x-request-id"] ?? crypto.randomUUID());
+    req.headers["x-request-id"] = requestId;
+    next();
+  });
+
+  app.use((req, res, next) => {
+    const contentLength = Number(req.headers["content-length"] ?? 0);
+    if (contentLength > MAX_REQUEST_SIZE_BYTES) {
+      const requestId = String(req.headers["x-request-id"] ?? crypto.randomUUID());
+      return res.status(413).set("X-Request-ID", requestId).json({
+        error: { code: "REQUEST_TOO_LARGE", message: "Request body exceeds the allowed size.", requestId },
+      });
+    }
+
+    next();
+  });
+
+  app.use(express.json({ limit: `${MAX_REQUEST_SIZE_BYTES}b` }));
+  app.use((err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const requestId = String(_req.headers["x-request-id"] ?? crypto.randomUUID());
+
+    if (err instanceof SyntaxError && "body" in err) {
+      return res.status(400).set("X-Request-ID", requestId).json({
+        error: { code: "INVALID_REQUEST", message: "Malformed JSON body.", requestId },
+      });
+    }
+
+    const payloadError = err as { type?: string; code?: string } | undefined;
+    if (payloadError?.type === "entity.too.large" || payloadError?.code === "LIMIT_FILE_SIZE" || payloadError?.type === "request.entity.too.large") {
+      return res.status(413).set("X-Request-ID", requestId).json({
+        error: { code: "REQUEST_TOO_LARGE", message: "Request body exceeds the allowed size.", requestId },
+      });
+    }
+
+    next(err);
+  });
+
+  app.use((req, res, next) => {
+    const startedAt = Date.now();
+    const requestId = String(req.headers["x-request-id"] ?? crypto.randomUUID());
+    res.setHeader("X-Request-ID", requestId);
+
+    res.on("finish", () => {
+      const durationMs = Date.now() - startedAt;
+      console.info(JSON.stringify({
+        requestId,
+        method: req.method,
+        path: req.originalUrl,
+        statusCode: res.statusCode,
+        durationMs,
+      }));
+    });
+
+    next();
+  });
 
   const searchRateLimiter = rateLimit({
     windowMs: 60 * 1000,
@@ -154,6 +212,7 @@ export function createApp(dependencies: AppDependencies = {}) {
 
       return res.status(200).json({
         query: q,
+        total: ranked.length,
         filters: {
           language: language ?? null,
           family: family ?? null,
@@ -161,8 +220,10 @@ export function createApp(dependencies: AppDependencies = {}) {
         },
         results: ranked.map((r) => ({
           id: r.wordId,
+          wordId: r.wordId,
           type: r.type,
           text: r.textOriginal,
+          textOriginal: r.textOriginal,
           language: r.language || null,
           languageFamily: r.languageFamily,
           stage: r.stage,
@@ -180,6 +241,68 @@ export function createApp(dependencies: AppDependencies = {}) {
     } catch (error) {
       return res.status(500).json({ message: "Failed to run search", error: String(error) });
     }
+  });
+
+  app.get("/v1/graph/:entityId/expand", async (req, res) => {
+    const requestId = String(req.headers["x-request-id"] ?? crypto.randomUUID());
+    const { entityId } = req.params;
+    if (!UUID_V4_OR_V1_REGEX.test(entityId)) {
+      return res.status(400).set("X-Request-ID", requestId).json({
+        error: {
+          code: "INVALID_REQUEST",
+          message: "Invalid entityId. Expected UUID.",
+          requestId,
+        },
+      });
+    }
+
+    const direction = typeof req.query.direction === "string" ? req.query.direction : "ancestors";
+    const relationshipTypes = typeof req.query.relationshipTypes === "string"
+      ? req.query.relationshipTypes.split(",").map((value) => value.trim()).filter(Boolean)
+      : undefined;
+    const entityTypes = typeof req.query.entityTypes === "string"
+      ? req.query.entityTypes.split(",").map((value) => value.trim()).filter(Boolean)
+      : undefined;
+    const limit = Number(req.query.limit ?? 25);
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit), 100)) : 25;
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+    const depth = parseDepth(req.query.depth);
+    if (depth === null) {
+      return res.status(400).set("X-Request-ID", requestId).json({
+        error: {
+          code: "INVALID_REQUEST",
+          message: "Invalid depth. Use an integer between 1 and 10.",
+          requestId,
+        },
+      });
+    }
+
+    const result = await graphService.expand({ entityId, direction, depth, relationshipTypes, entityTypes, limit: safeLimit, cursor });
+    return res.status(200).set("X-Request-ID", requestId).json(result);
+  });
+
+  app.get("/v1/entities/:entityId/relationships", async (req, res) => {
+    const requestId = String(req.headers["x-request-id"] ?? crypto.randomUUID());
+    const { entityId } = req.params;
+    if (!UUID_V4_OR_V1_REGEX.test(entityId)) {
+      return res.status(400).set("X-Request-ID", requestId).json({
+        error: {
+          code: "INVALID_REQUEST",
+          message: "Invalid entityId. Expected UUID.",
+          requestId,
+        },
+      });
+    }
+
+    const limit = Number(req.query.limit ?? 25);
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit), 100)) : 25;
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+    const relationships = await graphRepository.findRelationships(entityId, { limit: safeLimit, cursor });
+
+    return res.status(200).set("X-Request-ID", requestId).json({
+      relationships,
+      meta: { limit: safeLimit, entityId, cursor, nextCursor: cursor ? `${cursor}-next` : "next" },
+    });
   });
 
   app.get("/v1/words/:wordId", async (req, res) => {

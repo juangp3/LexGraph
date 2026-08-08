@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 
 export interface RawRecordStoreClient {
-  query: (text: string, params?: unknown[]) => Promise<unknown>;
+  query<T = unknown>(text: string, params?: unknown[]): Promise<{ rows: Array<T> }>;
 }
 
 export interface RawRecordReference {

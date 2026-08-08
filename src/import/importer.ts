@@ -30,13 +30,13 @@ export class ImportPipeline {
   async run(rejectionLogPath: string = "logs/import-rejections.ndjson"): Promise<ImportRunResult> {
     const rawRecords = await this.parser.parse();
     const stagedRecords: RawRecordStagingInput[] = rawRecords.map((record, index) => ({
-      payload: record as Record<string, unknown>,
+      payload: record as unknown as Record<string, unknown>,
       sourceKey: `record-${index}`
     }));
 
     const client = await dbPool.connect();
     const existingHashes = new Set<string>();
-    let jobId = randomUUID();
+    let jobId: string = randomUUID();
 
     const latestFailedJob = await client.query<{ id: string }>(
       `SELECT id FROM import_jobs WHERE status = 'FAILED' ORDER BY created_at DESC LIMIT 1`

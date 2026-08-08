@@ -1,4 +1,4 @@
-import { GraphService } from '../services/graph.service';
+import { GraphService } from '../services/graph.service.js';
 import { Request, Response, NextFunction } from 'express';
 
 export class GraphController {

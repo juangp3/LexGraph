@@ -59,7 +59,7 @@ describe("import provenance", () => {
       relatedWordAsciiFolded: null,
       relatedLanguage: null,
       relatedStage: null
-    } as never;
+    } as Parameters<typeof deduplicateRecords>[0][number];
 
     const result = deduplicateRecords([
       baseRecord,

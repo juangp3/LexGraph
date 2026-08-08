@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { PgGraphRepository } from '../repositories/pg-graph.repository';
-import { GraphService } from '../services/graph.service';
-import { GraphController } from '../controllers/graph.controller';
+import { PgGraphRepository } from '../repositories/pg-graph.repository.js';
+import { GraphService } from '../services/graph.service.js';
+import { GraphController } from '../controllers/graph.controller.js';
 
 const router = Router();
 
