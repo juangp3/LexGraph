@@ -313,14 +313,16 @@ export class ImportPipeline {
       return existing;
     }
 
+    const isReconstructed = record.wordOriginal.startsWith('*');
+
     const inserted = await client.query<{ id: string }>(
       `
-      INSERT INTO words (language_id, text_original, text_normalized, text_ascii_folded)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO words (language_id, text_original, text_normalized, text_ascii_folded, is_reconstructed)
+      VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT DO NOTHING
       RETURNING id
       `,
-      [languageId, record.wordOriginal, record.wordNormalized, record.wordAsciiFolded]
+      [languageId, record.wordOriginal, record.wordNormalized, record.wordAsciiFolded, isReconstructed]
     );
 
     let wordId = inserted.rows[0]?.id;

@@ -19,12 +19,14 @@ function normalizeSearchInput(input: string): string {
 }
 
 function classifyMatchType(
+  textOriginal: string,
   textNormalized: string,
   textAsciiFolded: string,
   normalizedQuery: string,
   isReconstructed: boolean,
 ): SearchMatchType {
-  if (isReconstructed) return "root";
+  // Treat words prefixed with * as roots regardless of the DB flag (handles legacy data)
+  if (isReconstructed || textOriginal.startsWith('*')) return "root";
   if (textNormalized === normalizedQuery || textAsciiFolded === normalizedQuery) return "exact";
   if (textNormalized.startsWith(normalizedQuery) || textAsciiFolded.startsWith(normalizedQuery)) return "prefix";
   if (textNormalized.includes(normalizedQuery) || textAsciiFolded.includes(normalizedQuery)) return "substring";
@@ -157,13 +159,15 @@ export class PgSearchRepository implements SearchRepository {
     const result = await dbPool.query<WordSearchRow>(sql, params);
 
     return result.rows.map((row) => {
+      const isRoot = row.is_reconstructed || row.text_original.startsWith('*');
       const matchType = classifyMatchType(
+        row.text_original,
         row.text_normalized,
         row.text_ascii_folded,
         normalized,
         row.is_reconstructed
       );
-      const entityType: SearchEntityType = row.is_reconstructed ? "root" : "word";
+      const entityType: SearchEntityType = isRoot ? "root" : "word";
 
       return {
         wordId: row.id,
@@ -175,7 +179,7 @@ export class PgSearchRepository implements SearchRepository {
         score: Number(row.score),
         type: entityType,
         matchType,
-        isReconstructed: row.is_reconstructed,
+        isReconstructed: isRoot,
       };
     });
   }
