@@ -75,4 +75,33 @@ describe('InspectorPanel', () => {
     expect(screen.getByText('Oxford English Dictionary')).toBeInTheDocument();
     expect(screen.getByText('*ph2ter')).toBeInTheDocument();
   });
+
+  it('shows language family, pronunciation, and relationship summary when available', () => {
+    mockUseWordDetails.mockReturnValue({
+      data: {
+        word: 'father',
+        language: 'English',
+        languageFamily: 'Germanic',
+        pronunciation: '/ˈfɑːðə/',
+        meaning: 'A male parent.',
+        timeline: 'Old English -> Modern English',
+        sources: ['Oxford English Dictionary'],
+        ancestry: [{ language: 'Old English', stage: 'fæder' }],
+        relationshipSummary: { ancestors: 2, descendants: 4, cognates: 5, borrowings: 1 },
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<InspectorPanel word="father" />);
+
+    expect(screen.getByText('Germanic')).toBeInTheDocument();
+    expect(screen.getByText('/ˈfɑːðə/')).toBeInTheDocument();
+    expect(screen.getByText('Ancestors')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('Descendants')).toBeInTheDocument();
+    expect(screen.getByText('4')).toBeInTheDocument();
+    expect(screen.getByText('Cognates')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+  });
 });

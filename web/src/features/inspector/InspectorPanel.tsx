@@ -20,6 +20,13 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ word, wordId }) => {
     showToast({ title: 'Copied link', description: 'The current workspace URL is now on your clipboard.' });
   };
 
+  const relationshipItems = [
+    { label: 'Ancestors', value: data?.relationshipSummary?.ancestors ?? 0 },
+    { label: 'Descendants', value: data?.relationshipSummary?.descendants ?? 0 },
+    { label: 'Cognates', value: data?.relationshipSummary?.cognates ?? 0 },
+    { label: 'Borrowings', value: data?.relationshipSummary?.borrowings ?? 0 },
+  ];
+
   return (
     <section className="lex-card rounded-[var(--radius-2xl)] p-5" aria-label="Inspector panel">
       <div className="space-y-4">
@@ -43,24 +50,45 @@ const InspectorPanel: React.FC<InspectorPanelProps> = ({ word, wordId }) => {
               <Breadcrumb ancestry={data.ancestry} />
               <div className="space-y-1">
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground">{data.word}</h2>
-                <p className="text-sm text-muted-foreground">{data.language}</p>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                  <span>{data.language}</span>
+                  {data.languageFamily ? (
+                    <span className="rounded-full border border-border/60 bg-background/45 px-2 py-1 text-xs uppercase tracking-[0.2em] text-foreground">
+                      {data.languageFamily}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
 
             <div className="grid gap-4">
               <section className="rounded-[var(--radius-xl)] border border-border/60 bg-background/40 p-4">
-                <h3 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Summary</h3>
+                <h3 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Meaning</h3>
                 <p className="mt-2 text-sm leading-relaxed text-foreground">{data.meaning}</p>
               </section>
+              {data.pronunciation ? (
+                <section className="rounded-[var(--radius-xl)] border border-border/60 bg-background/40 p-4">
+                  <h3 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Pronunciation</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground">{data.pronunciation}</p>
+                </section>
+              ) : null}
               <section className="rounded-[var(--radius-xl)] border border-border/60 bg-background/40 p-4">
                 <h3 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Timeline</h3>
                 <p className="mt-2 text-sm leading-relaxed text-foreground">{data.timeline}</p>
+                {data.periodLabel ? (
+                  <p className="mt-2 text-xs text-muted-foreground">Period: {data.periodLabel}</p>
+                ) : null}
               </section>
               <section className="rounded-[var(--radius-xl)] border border-border/60 bg-background/40 p-4">
                 <h3 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Relationships</h3>
-                <p className="mt-2 text-sm leading-relaxed text-foreground">
-                  {data.ancestry.length} ancestral steps available in this reading path.
-                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-foreground">
+                  {relationshipItems.map((item) => (
+                    <div key={item.label} className="rounded-[var(--radius-lg)] border border-border/50 bg-background/35 px-3 py-2">
+                      <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{item.label}</div>
+                      <div className="mt-1 font-medium">{item.value}</div>
+                    </div>
+                  ))}
+                </div>
               </section>
             </div>
 

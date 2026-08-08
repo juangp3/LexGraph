@@ -120,6 +120,33 @@ export interface WordDetailSource {
   confidence: number;
 }
 
+export interface WordDetailRelationshipEdge {
+  relationType: string;
+  targetWord: string;
+  targetLanguage: string | null;
+  targetStage: string | null;
+  confidence: number | null;
+}
+
+export interface WordDetailEtymology {
+  ancestors: WordDetailRelationshipEdge[];
+  descendants: WordDetailRelationshipEdge[];
+  cognates: WordDetailRelationshipEdge[];
+  borrowings: WordDetailRelationshipEdge[];
+}
+
+export interface WordDetailRelationshipsSummary {
+  ancestors: number;
+  descendants: number;
+  cognates: number;
+  borrowings: number;
+}
+
+export interface WordDetailConfidence {
+  label: string;
+  value: number | null;
+}
+
 export interface WordDetails {
   wordId: string;
   textOriginal: string;
@@ -128,6 +155,14 @@ export interface WordDetails {
   stage: string | null;
   meanings: WordDetailMeaning[];
   sources: WordDetailSource[];
+  languageFamily?: string | null;
+  pronunciation?: string | null;
+  periodLabel?: string | null;
+  isReconstructed?: boolean;
+  etymology?: WordDetailEtymology;
+  relationships?: WordDetailRelationshipsSummary;
+  confidence?: WordDetailConfidence;
+  ancestry?: Array<{ stage: string; language: string }>;
 }
 
 export interface WordDetailsRepository {
