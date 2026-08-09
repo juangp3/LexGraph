@@ -31,6 +31,22 @@ interface BackendWordDetailsResponse {
   };
 }
 
+function normalizeEtymologyEdge(edge: {
+  relationType?: string;
+  targetWord?: string | null;
+  targetLanguage?: string | null;
+  targetStage?: string | null;
+  confidence?: number | null;
+}) {
+  return {
+    relationType: edge.relationType ?? 'UNKNOWN',
+    targetWord: edge.targetWord ?? 'Unknown',
+    targetLanguage: edge.targetLanguage ?? null,
+    targetStage: edge.targetStage ?? null,
+    confidence: edge.confidence ?? null,
+  };
+}
+
 class InspectorService {
   async getWordDetails(word: string): Promise<WordDetails> {
     const response = await fetch(`${API_BASE}/v1/words/${encodeURIComponent(word)}`);
@@ -76,10 +92,10 @@ class InspectorService {
         : undefined,
       etymology: payload.etymology
         ? {
-            ancestors: payload.etymology.ancestors ?? [],
-            descendants: payload.etymology.descendants ?? [],
-            cognates: payload.etymology.cognates ?? [],
-            borrowings: payload.etymology.borrowings ?? [],
+            ancestors: (payload.etymology.ancestors ?? []).map(normalizeEtymologyEdge),
+            descendants: (payload.etymology.descendants ?? []).map(normalizeEtymologyEdge),
+            cognates: (payload.etymology.cognates ?? []).map(normalizeEtymologyEdge),
+            borrowings: (payload.etymology.borrowings ?? []).map(normalizeEtymologyEdge),
           }
         : undefined,
       confidence: payload.confidence

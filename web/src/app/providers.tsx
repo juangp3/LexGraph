@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect } from "react";
 import { ThemeProvider } from "@/features/theme/ThemeProvider";
 import { ToastProvider, Toaster } from "@/components/ui/toast";
+import { AuthSessionProvider } from "@/features/auth/auth-session";
 
 const queryClient = new QueryClient();
 
@@ -39,11 +40,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <ToastProvider>
-        <QueryClientProvider client={queryClient}>
-          {children}
-          <ReactQueryDevtools initialIsOpen={false} />
-          <Toaster />
-        </QueryClientProvider>
+        <AuthSessionProvider>
+          <QueryClientProvider client={queryClient}>
+            {children}
+            <ReactQueryDevtools initialIsOpen={false} />
+            <Toaster />
+          </QueryClientProvider>
+        </AuthSessionProvider>
       </ToastProvider>
     </ThemeProvider>
   );

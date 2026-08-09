@@ -54,7 +54,9 @@ vi.mock('reactflow', async () => {
   };
 });
 
-const fetchMock = vi.fn();
+const { fetchMock } = vi.hoisted(() => ({
+  fetchMock: vi.fn(),
+}));
 vi.mock('@/features/graph/graph.service', () => ({
   graphService: { fetchTraversalFlow: fetchMock },
   mergeFlowGraphs: (arr: any[]) => arr.filter(Boolean)[0] ?? { nodes: [], edges: [] },
@@ -98,16 +100,16 @@ describe('GraphCanvas context menu and URL sync', () => {
     window.history.replaceState({}, '', '/workspace');
   });
 
-  it('shows context menu on right-click and triggers expand', async () => {
+  it('selects a node and triggers descendants expansion', async () => {
     const onSelect = vi.fn();
-    render(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId={null} onSelectNode={onSelect} />);
+    render(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId="A" onSelectNode={onSelect} />);
 
     const nodeA = await screen.findByText('A');
-    // right click
-    await userEvent.click(nodeA, { button: 2 });
+    await userEvent.click(nodeA);
 
-    const menuButton = await screen.findByText('Expand Descendants');
+    const menuButton = await screen.findByRole('button', { name: 'Expand Descendants' });
     expect(menuButton).toBeTruthy();
+    expect(menuButton).not.toHaveAttribute('disabled');
 
     await userEvent.click(menuButton);
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('descendants', 'A', 3));

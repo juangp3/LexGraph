@@ -110,6 +110,8 @@ model Word {
   wordSources          WordSource[]
   outgoingEdges        EtymologyEdge[] @relation("OutgoingWordEdges")
   incomingEdges        EtymologyEdge[] @relation("IncomingWordEdges")
+  savedWords           SavedWord[]
+  savedGraphs          SavedGraph[]
   createdAt            DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
 
@@ -190,4 +192,157 @@ model EdgeSource {
   @@unique([edgeId, sourceId, sourceLocator], map: "uq_edge_sources_edge_source_locator")
   @@index([sourceId])
   @@map("edge_sources")
+}
+
+model User {
+  id            String           @id @default(uuid()) @db.Uuid
+  email         String           @unique
+  passwordHash  String           @map("password_hash")
+  displayName   String?          @map("display_name")
+  avatarUrl     String?          @map("avatar_url")
+  status        String           @default("ACTIVE")
+  lastLoginAt   DateTime?        @map("last_login_at") @db.Timestamptz(6)
+  deletedAt     DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  sessions      UserSession[]
+  preferences   UserPreference?
+  savedWords    SavedWord[]
+  collections   Collection[]
+  savedGraphs   SavedGraph[]
+  notes         Note[]
+  searchHistory SearchHistory[]
+  recentViews   RecentView[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model UserSession {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  tokenHash  String   @map("token_hash") @unique
+  userAgent  String?  @map("user_agent")
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model UserPreference {
+  userId            String   @id @map("user_id") @db.Uuid
+  theme             String   @default("system")
+  interfaceLanguage String   @default("en") @map("interface_language")
+  defaultGraphDepth Int      @default(3) @map("default_graph_depth")
+  graphLayout       String   @default("hierarchical") @map("graph_layout")
+  showMeanings      Boolean  @default(true) @map("show_meanings")
+  showSources       Boolean  @default(true) @map("show_sources")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model SavedWord {
+  id          String                @id @default(uuid()) @db.Uuid
+  userId      String                @map("user_id") @db.Uuid
+  wordId      String                @map("word_id") @db.Uuid
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word        Word                  @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  collections CollectionSavedWord[]
+
+  @@unique([userId, wordId], map: "uq_saved_words_user_word")
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("saved_words")
+}
+
+model Collection {
+  id          String                @id @default(uuid()) @db.Uuid
+  userId      String                @map("user_id") @db.Uuid
+  name        String
+  description String?
+  position    Int                   @default(0)
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       CollectionSavedWord[]
+
+  @@unique([userId, name], map: "uq_collections_user_name")
+  @@index([userId])
+  @@map("collections")
+}
+
+model CollectionSavedWord {
+  collectionId String     @map("collection_id") @db.Uuid
+  savedWordId  String     @map("saved_word_id") @db.Uuid
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  savedWord    SavedWord  @relation(fields: [savedWordId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, savedWordId])
+  @@map("collection_saved_words")
+}
+
+model SavedGraph {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  rootEntityId     String   @map("root_entity_id") @db.Uuid
+  title            String
+  depth            Int      @default(3)
+  filters          Json     @db.JsonB
+  layoutPreference String?  @map("layout_preference")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rootEntity       Word     @relation(fields: [rootEntityId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+  @@map("saved_graphs")
+}
+
+model Note {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id") @db.Uuid
+  content    String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, updatedAt])
+  @@map("notes")
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  query     String
+  searchedAt DateTime @default(now()) @map("searched_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, searchedAt])
+  @@map("search_history")
+}
+
+model RecentView {
+  userId     String   @map("user_id") @db.Uuid
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  viewedAt   DateTime @default(now()) @map("viewed_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, entityType, entityId])
+  @@index([userId, viewedAt])
+  @@map("recent_views")
 }

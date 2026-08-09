@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import { Pool, type PoolClient } from "pg";
+import { Pool } from "pg";
 import { metrics } from "../observability/metrics.js";
 
 const connectionString =
@@ -31,24 +31,5 @@ instrumentedPool.query = (async (...args: Parameters<typeof dbPool.query>) => {
   }
 }) as typeof dbPool.query;
 
-const originalConnect = dbPool.connect.bind(dbPool) as () => Promise<PoolClient>;
-
-instrumentedPool.connect = (async () => {
-  const client = await originalConnect();
-  const originalClientQuery = client.query.bind(client);
-
-  client.query = (async (...queryArgs: Parameters<typeof client.query>) => {
-    const startedAt = performance.now();
-
-    try {
-      const result = await originalClientQuery(...queryArgs);
-      metrics.recordDatabaseQuery({ durationMs: performance.now() - startedAt, success: true });
-      return result;
-    } catch (error) {
-      metrics.recordDatabaseQuery({ durationMs: performance.now() - startedAt, success: false });
-      throw error;
-    }
-  }) as typeof client.query;
-
-  return client;
-}) as typeof dbPool.connect;
+// Do not monkey-patch `connect`: pg `Pool.query` depends on the native callback-capable
+// `connect` overloads internally. Overriding it with Promise-only behavior can stall queries.

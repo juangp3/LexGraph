@@ -1,4 +1,4 @@
-type HttpRouteClass = 'health' | 'ready' | 'search' | 'graph' | 'word' | 'import-status' | 'other';
+type HttpRouteClass = 'health' | 'ready' | 'search' | 'graph' | 'word' | 'workspace' | 'import-status' | 'other';
 
 interface Percentiles {
   p50: number | null;
@@ -89,6 +89,7 @@ function classifyRoute(path: string): HttpRouteClass {
   if (path.startsWith('/v1/search')) return 'search';
   if (path.startsWith('/v1/graph')) return 'graph';
   if (path.startsWith('/v1/words')) return 'word';
+  if (path.startsWith('/v1/me')) return 'workspace';
   if (path.startsWith('/v1/import-status')) return 'import-status';
   return 'other';
 }
@@ -102,7 +103,7 @@ export class MetricsStore {
   private readonly cacheMetrics = createCacheMetrics();
 
   constructor() {
-    for (const route of ['health', 'ready', 'search', 'graph', 'word', 'import-status', 'other'] as const) {
+    for (const route of ['health', 'ready', 'search', 'graph', 'word', 'workspace', 'import-status', 'other'] as const) {
       this.routeMetrics.set(route, createRouteMetrics());
     }
   }

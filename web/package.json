@@ -36,6 +36,7 @@
     "@tanstack/react-query-devtools": "^5.101.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.3",
     "@types/cors": "^2.8.19",
     "@types/dagre": "^0.7.54",
     "@types/node": "^20",

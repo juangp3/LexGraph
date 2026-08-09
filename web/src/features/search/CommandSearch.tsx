@@ -57,7 +57,7 @@ export function CommandSearch() {
 
   const { data: searchResults = [], isFetching } = useQuery<SearchResult[]>({
     queryKey: ["cmd-search", debouncedQuery],
-    queryFn: () => searchWords(debouncedQuery),
+    queryFn: ({ signal }) => searchWords(debouncedQuery, {}, signal),
     enabled: debouncedQuery.trim().length >= 1,
     staleTime: 30_000,
   });

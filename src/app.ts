@@ -17,6 +17,12 @@ import { getLatestImportJob, getRecentImportFailures } from './import/job-store.
 import { metrics } from './observability/metrics.js';
 import { MemoryCacheStore } from './cache/memory-cache.js';
 import { graphExpandCacheKey, searchCacheKey, wordDetailCacheKey } from './cache/keys.js';
+import { AuthOrchestrator } from './auth/auth.orchestrator.js';
+import { PgAuthStore } from './auth/pg-auth.store.js';
+import { WorkspaceOrchestrator } from './workspace/workspace.orchestrator.js';
+import { PgWorkspaceStore } from './workspace/pg-workspace.store.js';
+import { buildAuthRouter } from './routes/auth.routes.js';
+import { buildMeRouter } from './routes/me.routes.js';
 
 const UUID_V4_OR_V1_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -108,6 +114,8 @@ interface AppDependencies {
   graphRepository?: GraphRepository;
   searchRepository?: SearchRepository;
   wordDetailsRepository?: WordDetailsRepository;
+  authOrchestrator?: AuthOrchestrator;
+  workspaceOrchestrator?: WorkspaceOrchestrator;
 }
 
 function parseAllowedOrigins(): string[] {
@@ -131,6 +139,8 @@ export function createApp(dependencies: AppDependencies = {}) {
   const searchRepository = dependencies.searchRepository ?? new PgSearchRepository();
   const wordDetailsRepository = dependencies.wordDetailsRepository ?? new PgWordDetailsRepository();
   const graphService = new GraphService(graphRepository);
+  const authOrchestrator = dependencies.authOrchestrator ?? new AuthOrchestrator(new PgAuthStore());
+  const workspaceOrchestrator = dependencies.workspaceOrchestrator ?? new WorkspaceOrchestrator(new PgWorkspaceStore());
   const allowedOrigins = parseAllowedOrigins();
   const cache = new MemoryCacheStore();
   const graphConcurrency = new Map<string, number>();
@@ -247,6 +257,9 @@ export function createApp(dependencies: AppDependencies = {}) {
   app.get('/v1/metrics', (_req, res) => {
     res.status(200).json(metrics.snapshot());
   });
+
+  app.use('/v1/auth', buildAuthRouter(authOrchestrator));
+  app.use('/v1/me', buildMeRouter(authOrchestrator, workspaceOrchestrator));
 
   app.use('/v1/graph', graphRoutes);
 

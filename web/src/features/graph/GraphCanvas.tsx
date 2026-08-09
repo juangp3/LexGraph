@@ -14,12 +14,30 @@ import 'reactflow/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGraph } from './useGraph';
-import { graphService, mergeFlowGraphs, type FlowGraph, type GraphMode } from './graph.service';
+import { graphService, mergeFlowGraphs, type FlowGraph, type GraphLayout, type GraphMode } from './graph.service';
 import { useGraphStore } from './graph.store';
 import { useToast } from '@/components/ui/toast';
+import { useQuery } from '@tanstack/react-query';
+import { getPreferences } from '@/features/workspace/workspace.service';
+import { useAuthSession } from '@/features/auth/auth-session';
 
 const NODE_TYPES = {};
 const EDGE_TYPES = {};
+const ALLOWED_LAYOUTS: GraphLayout[] = ['hierarchical', 'radial', 'force-directed', 'grid'];
+const MIN_DEPTH = 1;
+const MAX_DEPTH = 8;
+
+function normalizeLayout(value: string | undefined): GraphLayout {
+  if (!value) return 'hierarchical';
+  return ALLOWED_LAYOUTS.includes(value as GraphLayout) ? (value as GraphLayout) : 'hierarchical';
+}
+
+function normalizeDepth(value: number | undefined): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return 6;
+  }
+  return Math.max(MIN_DEPTH, Math.min(MAX_DEPTH, Math.trunc(value)));
+}
 
 interface GraphCanvasProps {
   rootWordId: string | null;
@@ -29,7 +47,16 @@ interface GraphCanvasProps {
 }
 
 function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNode }: GraphCanvasProps) {
-  const { data, isLoading, isError, isFetching, refetch } = useGraph(rootWordId, 6, rootWordText);
+  const auth = useAuthSession();
+  const preferencesQuery = useQuery({
+    queryKey: ['workspace-preferences'],
+    queryFn: getPreferences,
+    enabled: auth.isAuthenticated,
+  });
+  const preferredLayout = normalizeLayout(preferencesQuery.data?.graphLayout);
+  const preferredDepth = normalizeDepth(preferencesQuery.data?.defaultGraphDepth);
+
+  const { data, isLoading, isError, isFetching, refetch } = useGraph(rootWordId, preferredDepth, rootWordText, preferredLayout);
   const [overlayGraphs, setOverlayGraphs] = useState<Partial<Record<GraphMode, FlowGraph>>>({});
   const [expandedDescendantGraphs, setExpandedDescendantGraphs] = useState<Record<string, FlowGraph>>({});
   const [collapsedNodeIds, setCollapsedNodeIds] = useState<Set<string>>(new Set());
@@ -71,12 +98,12 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     if (!nodeId || expandedDescendantGraphs[nodeId]) return;
     setIsExpandingDescendants(true);
     try {
-      const graph = await graphService.fetchTraversalFlow('descendants', nodeId, 3);
+      const graph = await graphService.fetchTraversalFlow('descendants', nodeId, preferredDepth, undefined, preferredLayout);
       setExpandedDescendantGraphs((prev) => ({ ...prev, [nodeId]: graph }));
     } finally {
       setIsExpandingDescendants(false);
     }
-  }, [expandedDescendantGraphs]);
+  }, [expandedDescendantGraphs, preferredDepth, preferredLayout]);
 
   const onNodeDoubleClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -92,14 +119,13 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
       if (!rootWordId) return;
       setLoadingRelationMode(mode);
       try {
-        const depth = mode === 'cognates' ? 2 : 3;
-        const graph = await graphService.fetchTraversalFlow(mode, rootWordId, depth);
+        const graph = await graphService.fetchTraversalFlow(mode, rootWordId, preferredDepth, undefined, preferredLayout);
         setOverlayGraphs((prev) => ({ ...prev, [mode]: graph }));
       } finally {
         setLoadingRelationMode(null);
       }
     },
-    [rootWordId]
+    [rootWordId, preferredDepth, preferredLayout]
   );
 
   const toggleFilter = useCallback(
@@ -120,12 +146,12 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
     }
     setIsExpandingDescendants(true);
     try {
-      const graph = await graphService.fetchTraversalFlow('descendants', selectedNodeId, 3);
+      const graph = await graphService.fetchTraversalFlow('descendants', selectedNodeId, preferredDepth, undefined, preferredLayout);
       setExpandedDescendantGraphs((prev) => ({ ...prev, [selectedNodeId]: graph }));
     } finally {
       setIsExpandingDescendants(false);
     }
-  }, [selectedNodeId, expandedDescendantGraphs]);
+  }, [selectedNodeId, expandedDescendantGraphs, preferredDepth, preferredLayout]);
 
   // URL sync: reflect selection and expanded nodes in query params, and restore from URL on mount
   useEffect(() => {

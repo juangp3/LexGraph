@@ -15,6 +15,10 @@ import { ThemeToggle } from "@/features/theme/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useState } from "react";
+import Link from "next/link";
+import { AuthMenu } from "@/features/auth/components/AuthMenu";
+import { WorkspaceNotebookPanel } from "@/features/workspace/components/WorkspaceNotebookPanel";
+import { useAuthSession } from "@/features/auth/auth-session";
 
 import { ReactFlowProvider } from "reactflow";
 
@@ -25,6 +29,12 @@ function Workspace() {
   const selectedWordText = searchParams.get("word");
   const selectedNodeId = searchParams.get("wordId") ?? searchParams.get("id") ?? selectedWordText;
   const selectedWord = useMemo(() => selectedWordText ?? selectedNodeId, [selectedNodeId, selectedWordText]);
+  const auth = useAuthSession();
+  const authHref = useMemo(() => {
+    const query = searchParams.toString();
+    const nextPath = `/workspace${query ? `?${query}` : ""}`;
+    return `/auth?next=${encodeURIComponent(nextPath)}`;
+  }, [searchParams]);
 
   const handleSelectNode = (nodeId: string, label: string) => {
     router.replace(
@@ -43,6 +53,12 @@ function Workspace() {
             <h1 className="text-lg font-semibold tracking-tight">Workspace</h1>
           </div>
           <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
+            <Link href="/workspace/settings" className="inline-flex">
+              <Button type="button" variant="outline" size="sm">
+                Settings
+              </Button>
+            </Link>
+            <AuthMenu />
             <ThemeToggle />
             <span className="rounded-full border border-border/70 px-3 py-1">Cmd+K search</span>
             <span className="rounded-full border border-border/70 px-3 py-1">React Flow</span>
@@ -74,6 +90,12 @@ function Workspace() {
         </div>
 
         <div className="relative overflow-hidden border-border/60 lg:border-r">
+          {!auth.isAuthenticated ? (
+            <div className="absolute inset-x-3 top-3 z-20 rounded-xl border border-border/70 bg-background/95 p-3 text-sm text-foreground shadow-[var(--shadow-raised)] backdrop-blur">
+              Save, collections, notes, and export require authentication.
+              <Link href={authHref} className="ml-2 inline-flex text-primary underline underline-offset-2">Sign in</Link>
+            </div>
+          ) : null}
           <GraphCanvas
             key={selectedNodeId ?? "empty"}
             rootWordId={selectedNodeId}
@@ -92,6 +114,23 @@ function Workspace() {
         <div className="lex-panel hidden flex-col gap-4 overflow-y-auto border-t border-border/60 p-4 lg:flex lg:border-t-0 lg:p-6">
           <WorkspaceFilters />
           <InspectorPanel word={selectedWord} wordId={selectedNodeId} />
+          {auth.isAuthenticated ? (
+            <WorkspaceNotebookPanel
+              selectedWordId={selectedNodeId}
+              selectedWordText={selectedWordText}
+              onOpenWord={handleSelectNode}
+            />
+          ) : (
+            <section className="lex-card rounded-[var(--radius-2xl)] p-4">
+              <h2 className="text-lg font-semibold">Sign in to save your research</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Collections, notes, saved graphs, and export are available for authenticated users.
+              </p>
+              <Link href={authHref} className="mt-3 inline-flex">
+                <Button type="button">Go to sign in</Button>
+              </Link>
+            </section>
+          )}
         </div>
 
         <div className="col-span-2 border-t border-border/60 bg-background/70 backdrop-blur">
