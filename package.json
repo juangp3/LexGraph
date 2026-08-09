@@ -9,7 +9,7 @@
     "dev:backend": "npm run dev",
     "dev:frontend": "cd web && npm run dev",
     "dev:full": "npx concurrently \"npm:dev:backend\" \"npm:dev:frontend\"",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "start:full": "tsx scripts/ensure-docker.ts && npm run infra:up && npm run dev:full",
     "stop:full": "npm run infra:down",
     "db:migrate": "prisma migrate deploy",
