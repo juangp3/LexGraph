@@ -111,10 +111,10 @@ CREATE INDEX "raw_import_records_job_id_idx" ON "raw_import_records"("job_id");
 CREATE INDEX "raw_import_records_source_hash_idx" ON "raw_import_records"("source_hash");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "uq_edge_sources_edge_source_locator" ON "edge_sources"("edge_id", "source_id", "source_locator");
+CREATE UNIQUE INDEX IF NOT EXISTS "uq_edge_sources_edge_source_locator" ON "edge_sources"("edge_id", "source_id", COALESCE("source_locator", ''));
 
 -- CreateIndex
-CREATE UNIQUE INDEX "uq_word_sources_prisma_compat" ON "word_sources"("word_id", "source_id", "source_locator");
+CREATE UNIQUE INDEX IF NOT EXISTS "uq_word_sources_prisma_compat" ON "word_sources"("word_id", "source_id", COALESCE("source_locator", ''));
 
 -- CreateIndex
 CREATE UNIQUE INDEX "uq_words_prisma_compat" ON "words"("language_id", "text_normalized", "lemma");

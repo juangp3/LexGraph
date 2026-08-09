@@ -24,7 +24,8 @@ describe("GET /v1/words/:wordId", () => {
             confidence: 1
           }
         ]
-      })
+      }),
+      getWordDetailsBatch: async () => [],
     };
 
     const app = createApp({ wordDetailsRepository: mockRepository });
@@ -47,7 +48,8 @@ describe("GET /v1/words/:wordId", () => {
 
   it("returns 404 when repository has no match", async () => {
     const mockRepository: WordDetailsRepository = {
-      getWordDetails: async () => null
+      getWordDetails: async () => null,
+      getWordDetailsBatch: async () => [],
     };
 
     const app = createApp({ wordDetailsRepository: mockRepository });
@@ -68,7 +70,8 @@ describe("GET /v1/words/:wordId", () => {
         stage: null,
         meanings: [],
         sources: []
-      })
+      }),
+      getWordDetailsBatch: async () => [],
     };
 
     const app = createApp({ wordDetailsRepository: mockRepository });
@@ -111,7 +114,8 @@ describe("GET /v1/words/:wordId", () => {
         },
         relationships: { ancestors: 1, descendants: 0, cognates: 0, borrowings: 0 },
         confidence: { label: "High confidence", value: 0.95 }
-      } as any)
+      } as any),
+      getWordDetailsBatch: async () => [],
     };
 
     const app = createApp({ wordDetailsRepository: mockRepository });
@@ -128,7 +132,8 @@ describe("GET /v1/words/:wordId", () => {
     const mockRepository: WordDetailsRepository = {
       getWordDetails: async () => {
         throw new Error("repository boom");
-      }
+      },
+      getWordDetailsBatch: async () => [],
     };
 
     const app = createApp({ wordDetailsRepository: mockRepository });

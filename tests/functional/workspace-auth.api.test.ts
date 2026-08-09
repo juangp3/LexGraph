@@ -21,6 +21,7 @@ class TestAuthStore implements AuthStore {
   users = new Map<string, AuthStoreUser>();
   byEmail = new Map<string, string>();
   sessions = new Map<string, AuthSessionRecord>();
+  providerLinks = new Map<string, string>();
   seq = 1;
 
   private id() {
@@ -81,6 +82,16 @@ class TestAuthStore implements AuthStore {
       return null;
     }
     return { session, user };
+  }
+
+  async findUserIdByProvider(provider: string, providerUserId: string): Promise<string | null> {
+    const key = `${provider}:${providerUserId}`;
+    return this.providerLinks.get(key) ?? null;
+  }
+
+  async createProviderLink(userId: string, provider: string, providerUserId: string): Promise<void> {
+    const key = `${provider}:${providerUserId}`;
+    this.providerLinks.set(key, userId);
   }
 
   async deleteSession(sessionId: string): Promise<void> {
@@ -327,21 +338,22 @@ describe("workspace/auth api", () => {
       .send({ email: "api@example.com", password: "very-secret-password", displayName: "API User" })
       .expect(201);
 
-    const token = register.body.session.accessToken as string;
-    expect(token).toBeTruthy();
+    const setCookie = register.headers['set-cookie'];
+    expect(setCookie).toBeTruthy();
 
-    const me = await request(app).get("/v1/me").set("Authorization", `Bearer ${token}`).expect(200);
+    const cookie = Array.isArray(setCookie) ? setCookie.join('; ') : String(setCookie);
+    const me = await request(app).get("/v1/me").set('Cookie', cookie).expect(200);
     expect(me.body.email).toBe("api@example.com");
 
     const saveWord = await request(app)
       .post("/v1/me/saved-words")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookie)
       .send({ wordId: "30000000-0000-4000-8000-000000000001" })
       .expect(200);
 
     expect(saveWord.body.wordId).toBe("30000000-0000-4000-8000-000000000001");
 
-    const list = await request(app).get("/v1/me/saved-words").set("Authorization", `Bearer ${token}`).expect(200);
+    const list = await request(app).get("/v1/me/saved-words").set('Cookie', cookie).expect(200);
     expect(list.body.items).toHaveLength(1);
 
     const withoutToken = await request(app).get("/v1/me/saved-words").expect(401);
@@ -357,23 +369,25 @@ describe("workspace/auth api", () => {
       .post("/v1/auth/register")
       .send({ email: "user-a@example.com", password: "very-secret-password", displayName: "User A" })
       .expect(201);
-    const tokenA = registerA.body.session.accessToken as string;
+    const setCookieA = registerA.headers['set-cookie'];
+    const tokenAcookie = Array.isArray(setCookieA) ? setCookieA.join('; ') : String(setCookieA);
 
     const registerB = await request(app)
       .post("/v1/auth/register")
       .send({ email: "user-b@example.com", password: "very-secret-password", displayName: "User B" })
       .expect(201);
-    const tokenB = registerB.body.session.accessToken as string;
+    const setCookieB = registerB.headers['set-cookie'];
+    const tokenBcookie = Array.isArray(setCookieB) ? setCookieB.join('; ') : String(setCookieB);
 
     const saved = await request(app)
       .post("/v1/me/saved-words")
-      .set("Authorization", `Bearer ${tokenA}`)
+      .set('Cookie', tokenAcookie)
       .send({ wordId: "30000000-0000-4000-8000-000000000111" })
       .expect(200);
 
     await request(app)
       .delete(`/v1/me/saved-words/${saved.body.id}`)
-      .set("Authorization", `Bearer ${tokenB}`)
+      .set('Cookie', tokenBcookie)
       .expect(404);
   });
 
@@ -386,17 +400,19 @@ describe("workspace/auth api", () => {
       .post("/v1/auth/register")
       .send({ email: "note-a@example.com", password: "very-secret-password", displayName: "User A" })
       .expect(201);
-    const tokenA = registerA.body.session.accessToken as string;
+    const setCookieA2 = registerA.headers['set-cookie'];
+    const tokenAcookie2 = Array.isArray(setCookieA2) ? setCookieA2.join('; ') : String(setCookieA2);
 
     const registerB = await request(app)
       .post("/v1/auth/register")
       .send({ email: "note-b@example.com", password: "very-secret-password", displayName: "User B" })
       .expect(201);
-    const tokenB = registerB.body.session.accessToken as string;
+    const setCookieB2 = registerB.headers['set-cookie'];
+    const tokenBcookie2 = Array.isArray(setCookieB2) ? setCookieB2.join('; ') : String(setCookieB2);
 
     const note = await request(app)
       .post("/v1/me/notes")
-      .set("Authorization", `Bearer ${tokenA}`)
+      .set('Cookie', tokenAcookie2)
       .send({
         targetType: "WORD",
         targetId: "30000000-0000-4000-8000-000000000211",
@@ -406,7 +422,7 @@ describe("workspace/auth api", () => {
 
     await request(app)
       .patch(`/v1/me/notes/${note.body.id}`)
-      .set("Authorization", `Bearer ${tokenB}`)
+      .set('Cookie', tokenBcookie2)
       .send({ content: "intrusion" })
       .expect(404);
   });
@@ -420,23 +436,24 @@ describe("workspace/auth api", () => {
       .post("/v1/auth/register")
       .send({ email: "delete-flow@example.com", password: "very-secret-password", displayName: "Delete Me" })
       .expect(201);
-    const token = register.body.session.accessToken as string;
+    const setCookieDelete = register.headers['set-cookie'];
+    const cookieDelete = Array.isArray(setCookieDelete) ? setCookieDelete.join('; ') : String(setCookieDelete);
 
     await request(app)
       .delete("/v1/me")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieDelete)
       .send({ password: "wrong-password" })
       .expect(401);
 
     await request(app)
       .delete("/v1/me")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieDelete)
       .send({ password: "very-secret-password" })
       .expect(204);
 
     await request(app)
       .get("/v1/me")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieDelete)
       .expect(401);
   });
 
@@ -449,29 +466,30 @@ describe("workspace/auth api", () => {
       .post("/v1/auth/register")
       .send({ email: "contract@example.com", password: "very-secret-password", displayName: "Contract User" })
       .expect(201);
-    const token = register.body.session.accessToken as string;
+    const setCookieContract = register.headers['set-cookie'];
+    const cookieContract = Array.isArray(setCookieContract) ? setCookieContract.join('; ') : String(setCookieContract);
 
     const saved = await request(app)
       .post("/v1/me/saved-words")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ wordId: "30000000-0000-4000-8000-000000000301" })
       .expect(200);
 
     const collection = await request(app)
       .post("/v1/me/collections")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ name: "Research", description: "PIE chain" })
       .expect(201);
 
     await request(app)
       .post(`/v1/me/collections/${collection.body.id}/items`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ savedWordId: saved.body.id })
       .expect(204);
 
     const bookmark = await request(app)
       .post("/v1/me/bookmarks")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ wordId: "30000000-0000-4000-8000-000000000301" })
       .expect(200);
 
@@ -479,24 +497,24 @@ describe("workspace/auth api", () => {
 
     await request(app)
       .get("/v1/me/bookmarks")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .expect(200);
 
     await request(app)
       .post(`/v1/me/collections/${collection.body.id}/items/bulk-add`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ savedWordIds: [saved.body.id] })
       .expect(200);
 
     await request(app)
       .patch(`/v1/me/collections/${collection.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ name: "Research Updated" })
       .expect(200);
 
     const note = await request(app)
       .post("/v1/me/notes")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({
         targetType: "WORD",
         targetId: "30000000-0000-4000-8000-000000000302",
@@ -506,19 +524,19 @@ describe("workspace/auth api", () => {
 
     await request(app)
       .patch(`/v1/me/notes/${note.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ content: "Updated note" })
       .expect(200);
 
     await request(app)
       .post("/v1/me/notes/bulk-delete")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ noteIds: [note.body.id] })
       .expect(200);
 
     const note2 = await request(app)
       .post("/v1/me/notes")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({
         targetType: "WORD",
         targetId: "30000000-0000-4000-8000-000000000302",
@@ -528,7 +546,7 @@ describe("workspace/auth api", () => {
 
     const graph = await request(app)
       .post("/v1/me/saved-graphs")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({
         rootEntityId: "30000000-0000-4000-8000-000000000303",
         title: "Father lineage",
@@ -539,25 +557,25 @@ describe("workspace/auth api", () => {
 
     await request(app)
       .patch(`/v1/me/saved-graphs/${graph.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ title: "Father lineage updated" })
       .expect(200);
 
     await request(app)
       .post("/v1/me/history")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ query: "father" })
       .expect(204);
 
     await request(app)
       .post("/v1/me/recent")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ entityType: "WORD", entityId: "30000000-0000-4000-8000-000000000304" })
       .expect(204);
 
     const workspaceSearch = await request(app)
       .get("/v1/me/workspace-search")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .query({ q: "research" })
       .expect(200);
 
@@ -565,20 +583,20 @@ describe("workspace/auth api", () => {
 
     await request(app)
       .patch("/v1/me/preferences")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ defaultGraphDepth: 4, graphLayout: "radial" })
       .expect(200);
 
     const exported = await request(app)
       .get("/v1/me/export")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .expect(200);
 
     expect(exported.body.version).toBe(1);
 
     await request(app)
       .post("/v1/me/import")
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({
         version: 1,
         collections: [{ name: "Imported Collection" }],
@@ -588,33 +606,33 @@ describe("workspace/auth api", () => {
 
     await request(app)
       .delete(`/v1/me/saved-graphs/${graph.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .expect(204);
 
     await request(app)
       .delete(`/v1/me/notes/${note.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .expect(404);
 
     await request(app)
       .delete(`/v1/me/notes/${note2.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .expect(204);
 
     await request(app)
       .post(`/v1/me/collections/${collection.body.id}/items/bulk-remove`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .send({ savedWordIds: [saved.body.id] })
       .expect(200);
 
     await request(app)
       .delete(`/v1/me/bookmarks/${bookmark.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .expect(204);
 
     await request(app)
       .delete(`/v1/me/collections/${collection.body.id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Cookie', cookieContract)
       .expect(204);
   });
 });

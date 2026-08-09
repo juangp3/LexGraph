@@ -137,6 +137,71 @@ export class AuthOrchestrator {
     };
   }
 
+  async oauthSignIn(provider: string, providerUserId: string, profile: { email?: string | null; displayName?: string | null; avatarUrl?: string | null }, metadata: { userAgent: string | null; ipAddress: string | null }): Promise<LoginResult> {
+    // Try to match by email first when available
+    const email = profile.email ? normalizeEmail(profile.email) : null;
+
+    // First, attempt to find by provider link
+    let userId = await this.store.findUserIdByProvider(provider, providerUserId);
+    let user = null;
+
+    if (userId) {
+      user = await this.store.findUserById(userId);
+    }
+
+    if (!user) {
+      // Next, try to find by email
+      if (email) {
+        user = await this.store.findUserByEmail(email);
+      }
+    }
+
+    if (!user) {
+      // Create a new user with a random password hash and optional avatar
+      const randomPassword = randomBytes(24).toString("hex");
+      const passwordHash = await hashPassword(randomPassword);
+
+      const created = await this.store.createUser({
+        email: email ?? `${providerUserId}@${provider}.local`,
+        passwordHash,
+        displayName: sanitizeDisplayName(profile.displayName ?? undefined),
+        avatarUrl: profile.avatarUrl ?? null,
+      });
+
+      user = created as any;
+      userId = user.id;
+
+      // create provider link
+      await this.store.createProviderLink(provider, providerUserId, userId as string);
+    } else {
+      userId = user.id;
+      // ensure provider link exists
+      await this.store.createProviderLink(provider, providerUserId, userId as string);
+    }
+
+    await this.store.updateLastLogin(user.id, new Date());
+    const refreshed = await this.store.findUserById(user.id);
+    if (!refreshed) {
+      throw new AuthError("ACCOUNT_NOT_FOUND", "Account not found.", 404);
+    }
+
+    const session = await this.createSessionForUser(refreshed.id, metadata);
+
+    return {
+      user: {
+        id: refreshed.id,
+        email: refreshed.email,
+        displayName: refreshed.displayName,
+        avatarUrl: refreshed.avatarUrl,
+        status: refreshed.status,
+        createdAt: refreshed.createdAt,
+        updatedAt: refreshed.updatedAt,
+        lastLoginAt: refreshed.lastLoginAt,
+      },
+      session,
+    };
+  }
+
   async authenticate(token: string): Promise<AuthenticatedUser | null> {
     if (!token) {
       return null;

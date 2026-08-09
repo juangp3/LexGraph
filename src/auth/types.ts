@@ -57,7 +57,7 @@ export interface AuthSessionRecord {
 }
 
 export interface AuthStore {
-  createUser(input: { email: string; passwordHash: string; displayName: string | null }): Promise<AuthStoreUser>;
+  createUser(input: { email: string; passwordHash: string; displayName: string | null; avatarUrl?: string | null }): Promise<AuthStoreUser>;
   findUserByEmail(email: string): Promise<AuthStoreUser | null>;
   findUserById(userId: string): Promise<AuthStoreUser | null>;
   createSession(input: {
@@ -71,4 +71,7 @@ export interface AuthStore {
   deleteSession(sessionId: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
   updateLastLogin(userId: string, at: Date): Promise<void>;
+  // Provider link support
+  findUserIdByProvider(provider: string, providerUserId: string): Promise<string | null>;
+  createProviderLink(provider: string, providerUserId: string, userId: string): Promise<void>;
 }

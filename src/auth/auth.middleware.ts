@@ -25,7 +25,19 @@ function parseBearerToken(headerValue: string | undefined): string | null {
 
 export function requireAuth(auth: AuthOrchestrator) {
   return async function authMiddleware(req: Request, res: Response, next: NextFunction) {
-    const token = parseBearerToken(req.header("authorization"));
+    // Try cookie first
+    let token: string | null = null;
+    const cookieHeader = req.header("cookie");
+    if (cookieHeader) {
+      const match = cookieHeader.split(";").map(s => s.trim()).find(s => s.startsWith((process.env.SESSION_COOKIE_NAME ?? "lexgraph_auth") + "="));
+      if (match) {
+        token = match.split("=").slice(1).join("=");
+      }
+    }
+
+    if (!token) {
+      token = parseBearerToken(req.header("authorization"));
+    }
     if (!token) {
       return res.status(401).json({
         error: { code: "UNAUTHORIZED", message: "Authentication required." },

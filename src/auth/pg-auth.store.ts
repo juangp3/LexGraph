@@ -29,14 +29,14 @@ function mapSession(row: Record<string, unknown>): AuthSessionRecord {
 }
 
 export class PgAuthStore implements AuthStore {
-  async createUser(input: { email: string; passwordHash: string; displayName: string | null }): Promise<AuthStoreUser> {
+  async createUser(input: { email: string; passwordHash: string; displayName: string | null; avatarUrl?: string | null }): Promise<AuthStoreUser> {
     const result = await dbPool.query(
       `
-      INSERT INTO users (email, password_hash, display_name, status)
-      VALUES ($1, $2, $3, 'ACTIVE')
+      INSERT INTO users (email, password_hash, display_name, avatar_url, status)
+      VALUES ($1, $2, $3, $4, 'ACTIVE')
       RETURNING id, email, display_name, avatar_url, status, password_hash, created_at, updated_at, last_login_at
       `,
-      [input.email, input.passwordHash, input.displayName],
+      [input.email, input.passwordHash, input.displayName, input.avatarUrl ?? null],
     );
 
     return mapUser(result.rows[0] as Record<string, unknown>);
@@ -174,6 +174,23 @@ export class PgAuthStore implements AuthStore {
     await dbPool.query(
       `UPDATE users SET last_login_at = $2, updated_at = now() WHERE id = $1`,
       [userId, at.toISOString()],
+    );
+  }
+
+  async findUserIdByProvider(provider: string, providerUserId: string): Promise<string | null> {
+    const result = await dbPool.query(
+      `SELECT user_id FROM provider_links WHERE provider = $1 AND provider_user_id = $2 LIMIT 1`,
+      [provider, providerUserId],
+    );
+
+    if (result.rows.length === 0) return null;
+    return String(result.rows[0].user_id);
+  }
+
+  async createProviderLink(provider: string, providerUserId: string, userId: string): Promise<void> {
+    await dbPool.query(
+      `INSERT INTO provider_links (provider, provider_user_id, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+      [provider, providerUserId, userId],
     );
   }
 }

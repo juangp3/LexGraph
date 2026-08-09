@@ -17,6 +17,8 @@ vi.mock('../../src/db/client.js', () => ({
 vi.mock('../../src/import/job-store.js', () => ({
   getLatestImportJob: vi.fn().mockResolvedValue(null),
   getRecentImportFailures: vi.fn().mockResolvedValue([]),
+  getImportJobDetails: vi.fn().mockResolvedValue(null),
+  getImportJobRawRecords: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('../../src/services/graph.service.js', () => ({

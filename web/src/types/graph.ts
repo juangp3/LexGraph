@@ -17,6 +17,13 @@ export interface GraphTraversalEdge {
   depth: number;
   path: string[];
   sources: GraphSource[];
+  provenance?: {
+    confidence: number;
+    evidenceSummary: string;
+    sourceCount: number;
+    sourceTitles: string[];
+    isDisputed: boolean;
+  };
 }
 
 export interface GraphTraversalResponse {

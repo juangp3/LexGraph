@@ -72,4 +72,25 @@ describe("integration: import pipeline", () => {
     expect(rejectionLog).toContain("REQUIRED_FIELD_MISSING");
     expect(rejectionLog).toContain("INVALID_RELATION_TYPE");
   });
+
+  it("imports the seed-v2 fixture into searchable words", async () => {
+    if (!shouldRun || !client) {
+      expect(true).toBe(true);
+      return;
+    }
+
+    const parser = new LocalJsonParser("tests/fixtures/seed-v2.json");
+    const pipeline = new ImportPipeline(parser);
+
+    const runResult = await pipeline.run("logs/import-seed-v2.ndjson");
+
+    expect(runResult.accepted).toBeGreaterThan(0);
+    expect(runResult.upsertedWords).toBeGreaterThan(0);
+
+    const wordsCount = await client.query<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM words`
+    );
+
+    expect(Number(wordsCount.rows[0].total)).toBeGreaterThan(0);
+  });
 });

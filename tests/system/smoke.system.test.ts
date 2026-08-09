@@ -116,6 +116,7 @@ const wordDetailsRepository: WordDetailsRepository = {
       },
     ],
   }),
+  getWordDetailsBatch: async () => [],
 };
 
 describe("system smoke", () => {

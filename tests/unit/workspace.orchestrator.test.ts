@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_GRAPH_DEPTH, MAX_GRAPH_DEPTH, MIN_GRAPH_DEPTH } from "../../src/domain/graph-depth.js";
 import { WorkspaceError, WorkspaceOrchestrator } from "../../src/workspace/workspace.orchestrator.js";
 import type {
   NoteTargetType,
@@ -372,6 +373,29 @@ describe("WorkspaceOrchestrator", () => {
     const updated = await workspace.updateCollection(userId, collection.id, { name: "Research v2" });
 
     expect(updated.name).toBe("Research v2");
+  });
+
+  it("uses the canonical graph depth policy for saved graphs and preferences", async () => {
+    const store = new InMemoryWorkspaceStore();
+    const workspace = new WorkspaceOrchestrator(store);
+    const userId = "00000000-0000-4000-8000-000000000011";
+
+    expect(MIN_GRAPH_DEPTH).toBe(1);
+    expect(DEFAULT_GRAPH_DEPTH).toBe(3);
+    expect(MAX_GRAPH_DEPTH).toBe(8);
+
+    const graph = await workspace.createSavedGraph(userId, {
+      rootEntityId: "00000000-0000-4000-8000-000000000012",
+      title: "Test",
+      depth: 12,
+      filters: {},
+      layoutPreference: "force-directed",
+    });
+
+    expect(graph.depth).toBe(MAX_GRAPH_DEPTH);
+
+    const preferences = await workspace.updatePreferences(userId, { defaultGraphDepth: 0 });
+    expect(preferences.defaultGraphDepth).toBe(MIN_GRAPH_DEPTH);
   });
 
   it("rejects invalid note target and content", async () => {

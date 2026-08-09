@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { ApiError, getPersistedAuthToken, persistAuthToken } from "@/lib/api-client";
 import { deleteMyAccount, fetchMe, login, logout, register, type AuthUser } from "./auth.service";
 
-interface AuthSessionContextValue {
+export interface AuthSessionContextValue {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
@@ -16,54 +16,60 @@ interface AuthSessionContextValue {
   removeAccount: (password: string) => Promise<void>;
 }
 
-const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
+export const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
 export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const applySession = useCallback((nextToken: string | null, nextUser: AuthUser | null) => {
-    setToken(nextToken);
+  const applySession = useCallback((nextUser: AuthUser | null) => {
     setUser(nextUser);
-    persistAuthToken(nextToken);
   }, []);
 
   const clearSession = useCallback(() => {
-    applySession(null, null);
+    applySession(null);
   }, [applySession]);
 
   const refreshMe = useCallback(async () => {
-    const activeToken = token ?? getPersistedAuthToken();
-    if (!activeToken) {
+    const persistedToken = getPersistedAuthToken();
+    if (!persistedToken) {
       clearSession();
       return;
     }
 
     try {
-      const me = await fetchMe(activeToken);
-      applySession(activeToken, me);
+      const me = await fetchMe(persistedToken);
+      applySession(me);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
+        persistAuthToken(null);
         clearSession();
         return;
       }
       throw error;
     }
-  }, [applySession, clearSession, token]);
+  }, [applySession, clearSession]);
 
   useEffect(() => {
     const run = async () => {
-      try {
-        const persisted = getPersistedAuthToken();
-        if (!persisted) {
-          clearSession();
-          return;
-        }
+      const persistedToken = getPersistedAuthToken();
+      if (!persistedToken) {
+        clearSession();
+        setIsLoading(false);
+        return;
+      }
 
-        const me = await fetchMe(persisted);
-        applySession(persisted, me);
+      try {
+        try {
+          const me = await fetchMe(persistedToken);
+          applySession(me);
+        } catch {
+          persistAuthToken(null);
+          clearSession();
+        }
       } catch {
+        persistAuthToken(null);
         clearSession();
       } finally {
         setIsLoading(false);
@@ -74,39 +80,41 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
   }, [applySession, clearSession]);
 
   const registerAndSignIn = useCallback(async (input: { email: string; password: string; displayName?: string }) => {
-    const payload = await register(input);
-    applySession(payload.session.accessToken, payload.user);
+    await register(input);
+    const me = await fetchMe();
+    applySession(me);
   }, [applySession]);
 
   const signIn = useCallback(async (input: { email: string; password: string }) => {
-    const payload = await login(input);
-    applySession(payload.session.accessToken, payload.user);
+    await login(input);
+    const me = await fetchMe();
+    applySession(me);
   }, [applySession]);
 
   const signOut = useCallback(async () => {
     try {
-      await logout(token ?? getPersistedAuthToken());
+      await logout();
     } finally {
       clearSession();
     }
-  }, [clearSession, token]);
+  }, [clearSession]);
 
   const removeAccount = useCallback(async (password: string) => {
-    await deleteMyAccount(password, token ?? getPersistedAuthToken());
+    await deleteMyAccount(password);
     clearSession();
-  }, [clearSession, token]);
+  }, [clearSession]);
 
   const value = useMemo<AuthSessionContextValue>(() => ({
     user,
-    token,
+    token: null,
     isLoading,
-    isAuthenticated: Boolean(user && token),
+    isAuthenticated: Boolean(user),
     registerAndSignIn,
     signIn,
     signOut,
     refreshMe,
     removeAccount,
-  }), [user, token, isLoading, registerAndSignIn, signIn, signOut, refreshMe, removeAccount]);
+  }), [user, isLoading, registerAndSignIn, signIn, signOut, refreshMe, removeAccount]);
 
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
 }

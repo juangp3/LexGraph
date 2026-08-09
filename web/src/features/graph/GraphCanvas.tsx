@@ -1,7 +1,7 @@
 "use client";
 
 import { toPng } from 'html-to-image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -19,13 +19,12 @@ import { useGraphStore } from './graph.store';
 import { useToast } from '@/components/ui/toast';
 import { useQuery } from '@tanstack/react-query';
 import { getPreferences } from '@/features/workspace/workspace.service';
-import { useAuthSession } from '@/features/auth/auth-session';
+import { AuthSessionContext } from '@/features/auth/auth-session';
+import { DEFAULT_GRAPH_DEPTH, MAX_GRAPH_DEPTH, MIN_GRAPH_DEPTH, normalizeGraphDepth } from './constants';
 
-const NODE_TYPES = {};
-const EDGE_TYPES = {};
+const NODE_TYPES = Object.freeze({});
+const EDGE_TYPES = Object.freeze({});
 const ALLOWED_LAYOUTS: GraphLayout[] = ['hierarchical', 'radial', 'force-directed', 'grid'];
-const MIN_DEPTH = 1;
-const MAX_DEPTH = 8;
 
 function normalizeLayout(value: string | undefined): GraphLayout {
   if (!value) return 'hierarchical';
@@ -33,10 +32,7 @@ function normalizeLayout(value: string | undefined): GraphLayout {
 }
 
 function normalizeDepth(value: number | undefined): number {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return 6;
-  }
-  return Math.max(MIN_DEPTH, Math.min(MAX_DEPTH, Math.trunc(value)));
+  return normalizeGraphDepth(value, DEFAULT_GRAPH_DEPTH);
 }
 
 interface GraphCanvasProps {
@@ -47,11 +43,12 @@ interface GraphCanvasProps {
 }
 
 function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNode }: GraphCanvasProps) {
-  const auth = useAuthSession();
+  const auth = useContext(AuthSessionContext);
+  const isAuthenticated = auth?.isAuthenticated ?? false;
   const preferencesQuery = useQuery({
     queryKey: ['workspace-preferences'],
     queryFn: getPreferences,
-    enabled: auth.isAuthenticated,
+    enabled: isAuthenticated,
   });
   const preferredLayout = normalizeLayout(preferencesQuery.data?.graphLayout);
   const preferredDepth = normalizeDepth(preferencesQuery.data?.defaultGraphDepth);
@@ -68,7 +65,11 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
   const [showMiniMap, setShowMiniMap] = useState(true);
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; nodeId?: string } | null>(null);
   const [hoverInfo, setHoverInfo] = useState<{ visible: boolean; x: number; y: number; label?: string } | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const showToast = useToast();
+  const stableNodeTypes = useMemo(() => NODE_TYPES, []);
+  const stableEdgeTypes = useMemo(() => EDGE_TYPES, []);
 
   useEffect(() => {
     resetRelationFilters();
@@ -76,10 +77,17 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      setSelectedNode(node);
+      setSelectedEdge(null);
       onSelectNode(node.id, String(node.data?.label ?? node.id));
     },
     [onSelectNode]
   );
+
+  const onEdgeClick = useCallback((_event: React.MouseEvent, edge: Edge) => {
+    setSelectedEdge(edge);
+    setSelectedNode(null);
+  }, []);
 
   const onNodeContextMenu = useCallback((e: React.MouseEvent, node: Node) => {
     e.preventDefault();
@@ -661,13 +669,14 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
               },
             } as Edge;
           }) as Edge[]}
-          nodeTypes={NODE_TYPES}
-          edgeTypes={EDGE_TYPES}
-            onNodeClick={onNodeClick}
-            onNodeDoubleClick={onNodeDoubleClick}
-            onNodeContextMenu={onNodeContextMenu}
-            onNodeMouseEnter={onNodeMouseEnter}
-            onNodeMouseLeave={onNodeMouseLeave}
+          nodeTypes={stableNodeTypes}
+          edgeTypes={stableEdgeTypes}
+          onNodeClick={onNodeClick}
+          onEdgeClick={onEdgeClick}
+          onNodeDoubleClick={onNodeDoubleClick}
+          onNodeContextMenu={onNodeContextMenu}
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={onNodeMouseLeave}
           fitView
           minZoom={0.2}
           maxZoom={1.8}
@@ -759,6 +768,26 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
           className="rounded px-2 py-1 text-xs bg-black text-white opacity-90"
         >
           {hoverInfo.label}
+        </div>
+      )}
+      {(selectedNode || selectedEdge) && (
+        <div className="absolute bottom-4 left-4 z-20 max-w-sm rounded-lg border border-border bg-background/95 p-3 shadow-lg">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Provenance</div>
+          {selectedNode ? (
+            <div className="mt-2 space-y-1 text-sm">
+              <div><span className="font-medium">Node:</span> {String(selectedNode.data?.label ?? selectedNode.id)}</div>
+              <div><span className="font-medium">Language:</span> {String(selectedNode.data?.language ?? 'Unknown')}</div>
+              <div><span className="font-medium">Confidence:</span> {selectedNode.data?.provenance?.confidence ? `${selectedNode.data.provenance.confidence.toFixed(2)}` : 'n/a'}</div>
+              <div className="text-muted-foreground">{String(selectedNode.data?.provenance?.evidenceSummary ?? 'Evidence not available')}</div>
+            </div>
+          ) : selectedEdge ? (
+            <div className="mt-2 space-y-1 text-sm">
+              <div><span className="font-medium">Relation:</span> {String(selectedEdge.data?.relationType ?? selectedEdge.label ?? 'Unknown')}</div>
+              <div><span className="font-medium">Confidence:</span> {selectedEdge.data?.provenance?.confidence ? `${selectedEdge.data.provenance.confidence.toFixed(2)}` : 'n/a'}</div>
+              <div><span className="font-medium">Disputed:</span> {selectedEdge.data?.provenance?.isDisputed ? 'Yes' : 'No'}</div>
+              <div className="text-muted-foreground">{String(selectedEdge.data?.provenance?.evidenceSummary ?? 'Evidence not available')}</div>
+            </div>
+          ) : null}
         </div>
       )}
       {!hasGraph && (

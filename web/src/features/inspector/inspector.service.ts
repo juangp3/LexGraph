@@ -51,6 +51,23 @@ class InspectorService {
   async getWordDetails(word: string): Promise<WordDetails> {
     const response = await fetch(`${API_BASE}/v1/words/${encodeURIComponent(word)}`);
     if (!response.ok) {
+      if (response.status === 404) {
+        return {
+          word,
+          language: 'Unknown',
+          meaning: 'Meaning unavailable for this node.',
+          sources: [],
+          timeline: 'Unknown timeline',
+          ancestry: [{ stage: word, language: 'Unknown' }],
+          languageFamily: null,
+          pronunciation: null,
+          periodLabel: null,
+          isReconstructed: false,
+          relationshipSummary: undefined,
+          etymology: undefined,
+          confidence: undefined,
+        };
+      }
       throw new Error(`Failed to fetch word metadata (${response.status})`);
     }
 

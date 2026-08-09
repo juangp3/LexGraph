@@ -167,6 +167,12 @@ export class ImportPipeline {
       );
       await client.query("COMMIT");
     } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error("IMPORT_TRANSACTION_FAILED", {
+        message: detail,
+        cause: error && typeof error === "object" && "cause" in error ? String((error as { cause?: unknown }).cause) : undefined,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       await client.query(
         `
         UPDATE import_jobs
@@ -189,7 +195,7 @@ export class ImportPipeline {
             upsertedEdges,
             status: "FAILED"
           }),
-          error: error instanceof Error ? error.message : String(error)
+          error: detail
         }]
       );
       await client.query("ROLLBACK");
@@ -278,23 +284,26 @@ export class ImportPipeline {
       return existing;
     }
 
-    const inserted = await client.query<{ id: string }>(
-      `
-      INSERT INTO sources (title, author, year, url, citation)
-      VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT DO NOTHING
-      RETURNING id
-      `,
-      [record.sourceTitle, record.sourceAuthor, record.sourceYear, record.sourceUrl, "week4-import"]
+    const existingSource = await client.query<{ id: string }>(
+      `SELECT id FROM sources WHERE title = $1 ORDER BY created_at ASC LIMIT 1`,
+      [record.sourceTitle]
     );
 
-    let sourceId = inserted.rows[0]?.id;
+    let sourceId = existingSource.rows[0]?.id;
     if (!sourceId) {
-      const existingSource = await client.query<{ id: string }>(
-        `SELECT id FROM sources WHERE title = $1 ORDER BY created_at ASC LIMIT 1`,
-        [record.sourceTitle]
+      const inserted = await client.query<{ id: string }>(
+        `
+        INSERT INTO sources (title, author, year, url, citation)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id
+        `,
+        [record.sourceTitle, record.sourceAuthor, record.sourceYear, record.sourceUrl, "week4-import"]
       );
-      sourceId = existingSource.rows[0].id;
+      sourceId = inserted.rows[0]?.id;
+    }
+
+    if (!sourceId) {
+      throw new Error(`Failed to resolve source id for ${record.sourceTitle}`);
     }
 
     context.sourceMap.set(cacheKey, sourceId);

@@ -96,6 +96,31 @@ function AuthContent() {
           <Button type="button" className="w-full" onClick={submit} disabled={isBusy} data-testid="auth-submit-button">
             {isBusy ? "Submitting..." : mode === "register" ? "Create account" : "Sign in"}
           </Button>
+          <div className="mt-2 space-y-2">
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001"}/v1/auth/oauth/github${nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ""}`}
+              className="inline-block w-full"
+            >
+              <Button type="button" variant="outline" className="w-full" data-icon="inline-start">
+                <span className="flex items-center gap-2">
+                  <img src="/icons/github.svg" alt="" className="size-4" />
+                  Continue with GitHub
+                </span>
+              </Button>
+            </a>
+
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001"}/v1/auth/oauth/google${nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ""}`}
+              className="inline-block w-full"
+            >
+              <Button type="button" variant="outline" className="w-full" data-icon="inline-start">
+                <span className="flex items-center gap-2">
+                  <img src="/icons/google.svg" alt="" className="size-4" />
+                  Continue with Google
+                </span>
+              </Button>
+            </a>
+          </div>
         </div>
       </section>
     </main>

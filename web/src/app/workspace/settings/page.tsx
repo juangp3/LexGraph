@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAuthSession } from "@/features/auth/auth-session";
 import { ApiError } from "@/lib/api-client";
 import { exportWorkspace, getPreferences, updatePreferences } from "@/features/workspace/workspace.service";
+import { DEFAULT_GRAPH_DEPTH, MAX_GRAPH_DEPTH, MIN_GRAPH_DEPTH, normalizeGraphDepth } from "@/features/graph/constants";
 
 function message(error: unknown): string {
   if (error instanceof ApiError) {
@@ -24,10 +25,7 @@ export default function WorkspaceSettingsPage() {
   const auth = useAuthSession();
   const showToast = useToast();
   const queryClient = useQueryClient();
-  const MIN_DEPTH = 1;
-  const MAX_DEPTH = 8;
-
-  const [depth, setDepth] = useState<number>(3);
+  const [depth, setDepth] = useState<number>(DEFAULT_GRAPH_DEPTH);
   const [layout, setLayout] = useState<string>("hierarchical");
   const [deletePassword, setDeletePassword] = useState("");
 
@@ -40,7 +38,7 @@ export default function WorkspaceSettingsPage() {
   useEffect(() => {
     if (!preferencesQuery.data) return;
     const p = preferencesQuery.data;
-    if (typeof p.defaultGraphDepth === 'number') setDepth(Math.max(MIN_DEPTH, Math.min(MAX_DEPTH, Math.trunc(p.defaultGraphDepth))));
+    if (typeof p.defaultGraphDepth === 'number') setDepth(normalizeGraphDepth(p.defaultGraphDepth, DEFAULT_GRAPH_DEPTH));
     if (typeof p.graphLayout === 'string' && p.graphLayout.length) setLayout(p.graphLayout);
   }, [preferencesQuery.data]);
 
@@ -109,11 +107,11 @@ export default function WorkspaceSettingsPage() {
                 value={String(depth)}
                 onChange={(event) => {
                   const v = Number(event.target.value);
-                  if (Number.isNaN(v)) return setDepth(MIN_DEPTH);
-                  setDepth(Math.max(MIN_DEPTH, Math.min(MAX_DEPTH, Math.trunc(v))));
+                  if (Number.isNaN(v)) return setDepth(MIN_GRAPH_DEPTH);
+                  setDepth(normalizeGraphDepth(v, DEFAULT_GRAPH_DEPTH));
                 }}
-                min={MIN_DEPTH}
-                max={MAX_DEPTH}
+                min={MIN_GRAPH_DEPTH}
+                max={MAX_GRAPH_DEPTH}
                 placeholder="Default graph depth"
                 data-testid="settings-depth-input"
               />
@@ -134,7 +132,7 @@ export default function WorkspaceSettingsPage() {
               type="button"
               className="mt-3"
               onClick={() => updateMutation.mutate()}
-              disabled={updateMutation.isPending || depth < MIN_DEPTH || depth > MAX_DEPTH}
+              disabled={updateMutation.isPending || depth < MIN_GRAPH_DEPTH || depth > MAX_GRAPH_DEPTH}
               data-testid="settings-save-preferences-button"
             >
               Save preferences

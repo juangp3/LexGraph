@@ -1,3 +1,4 @@
+import { DEFAULT_GRAPH_DEPTH, normalizeGraphDepth } from "../domain/graph-depth.js";
 import type {
   NoteTargetType,
   WorkspaceExportPayload,
@@ -257,7 +258,7 @@ export class WorkspaceOrchestrator {
     input: { rootEntityId: string; title?: string; depth?: number; filters?: unknown; layoutPreference?: string | null },
   ) {
     ensureUuid(input.rootEntityId, "INVALID_GRAPH", "rootEntityId must be a UUID.");
-    const depth = Number.isFinite(input.depth) ? Math.max(1, Math.min(10, Math.floor(input.depth as number))) : 3;
+    const depth = normalizeGraphDepth(input.depth, DEFAULT_GRAPH_DEPTH);
     const title = (input.title?.trim() || "Saved Graph").slice(0, 200);
 
     return this.store.createSavedGraph(userId, {
@@ -340,7 +341,7 @@ export class WorkspaceOrchestrator {
   ) {
     const nextPatch = { ...patch };
     if (patch.defaultGraphDepth !== undefined) {
-      nextPatch.defaultGraphDepth = Math.max(1, Math.min(10, Math.floor(patch.defaultGraphDepth)));
+      nextPatch.defaultGraphDepth = normalizeGraphDepth(patch.defaultGraphDepth, DEFAULT_GRAPH_DEPTH);
     }
     if (patch.theme !== undefined) {
       nextPatch.theme = patch.theme.trim().slice(0, 30);

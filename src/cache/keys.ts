@@ -3,6 +3,7 @@ export interface SearchCacheKeyInput {
   language?: string;
   family?: string;
   type?: string;
+  datasetVersion?: string;
   limit: number;
 }
 
@@ -17,6 +18,7 @@ export function searchCacheKey(input: SearchCacheKeyInput): string {
     normalize(input.language),
     normalize(input.family),
     normalize(input.type),
+    normalize(input.datasetVersion),
     String(input.limit),
   ];
 

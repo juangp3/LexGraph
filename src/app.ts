@@ -13,7 +13,7 @@ import type {
 import { GraphService } from "./services/graph.service.js";
 import graphRoutes from './routes/graph.routes.js';
 import { dbPool } from './db/client.js';
-import { getLatestImportJob, getRecentImportFailures } from './import/job-store.js';
+import { getImportJobDetails, getImportJobRawRecords, getLatestImportJob, getRecentImportFailures } from './import/job-store.js';
 import { metrics } from './observability/metrics.js';
 import { MemoryCacheStore } from './cache/memory-cache.js';
 import { graphExpandCacheKey, searchCacheKey, wordDetailCacheKey } from './cache/keys.js';
@@ -116,6 +116,12 @@ interface AppDependencies {
   wordDetailsRepository?: WordDetailsRepository;
   authOrchestrator?: AuthOrchestrator;
   workspaceOrchestrator?: WorkspaceOrchestrator;
+  importJobStore?: {
+    getLatestImportJob: typeof getLatestImportJob;
+    getRecentImportFailures: typeof getRecentImportFailures;
+    getImportJobDetails: typeof getImportJobDetails;
+    getImportJobRawRecords: typeof getImportJobRawRecords;
+  };
 }
 
 function parseAllowedOrigins(): string[] {
@@ -141,6 +147,12 @@ export function createApp(dependencies: AppDependencies = {}) {
   const graphService = new GraphService(graphRepository);
   const authOrchestrator = dependencies.authOrchestrator ?? new AuthOrchestrator(new PgAuthStore());
   const workspaceOrchestrator = dependencies.workspaceOrchestrator ?? new WorkspaceOrchestrator(new PgWorkspaceStore());
+  const importJobStore = dependencies.importJobStore ?? {
+    getLatestImportJob,
+    getRecentImportFailures,
+    getImportJobDetails,
+    getImportJobRawRecords,
+  };
   const allowedOrigins = parseAllowedOrigins();
   const cache = new MemoryCacheStore();
   const graphConcurrency = new Map<string, number>();
@@ -154,7 +166,8 @@ export function createApp(dependencies: AppDependencies = {}) {
       }
 
       callback(null, allowedOrigins.includes(origin));
-    }
+    },
+    credentials: true,
   }));
   app.use((req, _res, next) => {
     const requestId = String(req.headers["x-request-id"] ?? crypto.randomUUID());
@@ -267,14 +280,55 @@ export function createApp(dependencies: AppDependencies = {}) {
     try {
       const client = await dbPool.connect();
       try {
-        const latest = await getLatestImportJob(client);
-        const failures = await getRecentImportFailures(client, 5);
-        return res.status(200).json({ latest, failures });
+        const latest = await importJobStore.getLatestImportJob(client);
+        const failures = await importJobStore.getRecentImportFailures(client, 5);
+        const report = latest ? {
+          id: latest.id,
+          sourceName: latest.sourceName ?? null,
+          sourceVersion: (latest.summary as Record<string, unknown> | null | undefined)?.sourceVersion ?? (latest as Record<string, unknown>).sourceVersion ?? null,
+          status: latest.status,
+          processedCount: latest.processedCount ?? 0,
+          acceptedCount: latest.acceptedCount ?? 0,
+          rejectedCount: latest.rejectedCount ?? 0,
+          upsertedWords: latest.upsertedWords ?? 0,
+          upsertedEdges: latest.upsertedEdges ?? 0,
+          summary: latest.summary ?? null,
+        } : null;
+        return res.status(200).json({ latest, failures, report });
       } finally {
         client.release();
       }
     } catch (error) {
       return res.status(500).json({ message: "Failed to load import status", error: String(error) });
+    }
+  });
+
+  app.get("/v1/import-jobs/:jobId", async (req, res) => {
+    const { jobId } = req.params;
+    if (!UUID_V4_OR_V1_REGEX.test(jobId)) {
+      return res.status(400).json({ message: "Invalid jobId. Expected UUID." });
+    }
+
+    try {
+      const client = await dbPool.connect();
+      try {
+        const job = await importJobStore.getImportJobDetails(client, jobId);
+        if (!job) {
+          return res.status(404).json({ message: "Import job not found" });
+        }
+
+        const rawRecords = await importJobStore.getImportJobRawRecords(client, jobId);
+        return res.status(200).json({
+          job: {
+            ...job,
+            rawRecords,
+          },
+        });
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to load import job", error: String(error) });
     }
   });
 
@@ -306,7 +360,7 @@ export function createApp(dependencies: AppDependencies = {}) {
       ? Math.max(1, Math.min(rawLimit, MAX_SEARCH_LIMIT))
       : DEFAULT_SEARCH_LIMIT;
 
-    const cacheKey = searchCacheKey({ query: q, language, family, type: typeRaw, limit });
+    const cacheKey = searchCacheKey({ query: q, language, family, type: typeRaw, datasetVersion: DATASET_VERSION, limit });
     const cached = cacheLookup<unknown>(cache, cacheKey);
     if (cached.hit && cached.value) {
       metrics.recordSearch({ durationMs: Date.now() - startedAt, resultCount: Number((cached.value as { total?: number }).total ?? 0), statusCode: 200 });
@@ -345,6 +399,13 @@ export function createApp(dependencies: AppDependencies = {}) {
           match: {
             type: r.matchType,
             score: r.score,
+          },
+          provenance: {
+            confidence: r.score,
+            evidenceSummary: r.language && r.stage ? `${r.language} · ${r.stage}` : r.language ?? "Imported record",
+            sourceCount: 1,
+            sourceTitles: [r.languageFamily ?? "LexGraph"],
+            isDisputed: false,
           },
         })),
         metadata: {
@@ -497,6 +558,36 @@ export function createApp(dependencies: AppDependencies = {}) {
     return res.status(200).set("X-Request-ID", requestId).json(response);
   });
 
+  app.get("/v1/words/:wordId/provenance", async (req, res) => {
+    const { wordId } = req.params;
+    if (!UUID_V4_OR_V1_REGEX.test(wordId)) {
+      return res.status(400).json({ message: "Invalid wordId. Expected UUID." });
+    }
+
+    try {
+      const details = await withTimeout(wordDetailsRepository.getWordDetails(wordId), DEFAULT_QUERY_TIMEOUT_MS);
+      if (!details) {
+        return res.status(404).json({ message: "Word not found" });
+      }
+
+      const summary = {
+        wordId,
+        confidence: details.confidence?.value ?? 0.5,
+        evidenceSummary: details.sources.map((source) => `${source.title} (${source.sourceLocator ?? "unknown"})`).join(" | ") || "No evidence recorded",
+        sourceCount: details.sources.length,
+        sourceTitles: details.sources.map((source) => source.title),
+        isDisputed: details.sources.some((source) => source.confidence < 0.7),
+      };
+
+      return res.status(200).json(summary);
+    } catch (error) {
+      if (error instanceof TimeoutError) {
+        return res.status(504).json({ message: `Word provenance timed out after ${error.timeoutMs}ms` });
+      }
+      return res.status(500).json({ message: "Failed to load word provenance", error: String(error) });
+    }
+  });
+
   app.get("/v1/words/:wordId", async (req, res) => {
     const { wordId } = req.params;
     if (!UUID_V4_OR_V1_REGEX.test(wordId)) {
@@ -523,6 +614,35 @@ export function createApp(dependencies: AppDependencies = {}) {
         return res.status(504).json({ message: `Word lookup timed out after ${error.timeoutMs}ms` });
       }
       return res.status(500).json({ message: "Failed to load word details", error: String(error) });
+    }
+  });
+
+  app.post("/v1/words/batch", async (req, res) => {
+    const rawWordIds = Array.isArray(req.body?.wordIds) ? req.body.wordIds : [];
+    const wordIds: string[] = rawWordIds.filter((value: unknown): value is string => typeof value === "string" && UUID_V4_OR_V1_REGEX.test(value));
+
+    if (wordIds.length === 0) {
+      return res.status(400).json({ error: { code: "INVALID_REQUEST", message: "wordIds must contain UUID values." } });
+    }
+
+    if (wordIds.length > 500) {
+      return res.status(413).json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Too many word IDs in one request." } });
+    }
+
+    try {
+      const uniqueWordIds = [...new Set(wordIds)];
+      const details = await withTimeout(wordDetailsRepository.getWordDetailsBatch(uniqueWordIds), DEFAULT_QUERY_TIMEOUT_MS);
+      const items = uniqueWordIds.map((wordId, index) => ({
+        id: wordId,
+        ...(details[index] ?? null),
+      }));
+
+      return res.status(200).json({ items });
+    } catch (error) {
+      if (error instanceof TimeoutError) {
+        return res.status(504).json({ message: `Word lookup timed out after ${error.timeoutMs}ms` });
+      }
+      return res.status(500).json({ message: "Failed to load word details batch", error: String(error) });
     }
   });
 

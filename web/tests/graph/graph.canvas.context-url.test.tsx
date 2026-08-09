@@ -91,6 +91,11 @@ vi.mock('@/features/graph/graph.store', () => ({
 }));
 
 import { GraphCanvas } from '@/features/graph/GraphCanvas';
+import { renderWithAppProviders } from '../helpers/renderWithAppProviders';
+
+vi.mock('@/features/workspace/workspace.service', () => ({
+  getPreferences: vi.fn().mockResolvedValue({ defaultGraphDepth: 3, graphLayout: 'hierarchical' }),
+}));
 
 describe('GraphCanvas context menu and URL sync', () => {
   beforeEach(() => {
@@ -102,7 +107,7 @@ describe('GraphCanvas context menu and URL sync', () => {
 
   it('selects a node and triggers descendants expansion', async () => {
     const onSelect = vi.fn();
-    render(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId="A" onSelectNode={onSelect} />);
+    renderWithAppProviders(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId="A" onSelectNode={onSelect} />);
 
     const nodeA = await screen.findByText('A');
     await userEvent.click(nodeA);
@@ -112,18 +117,18 @@ describe('GraphCanvas context menu and URL sync', () => {
     expect(menuButton).not.toHaveAttribute('disabled');
 
     await userEvent.click(menuButton);
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('descendants', 'A', 3));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('descendants', 'A', 3, undefined, 'hierarchical'));
   });
 
   it('reads selection and expanded from URL on mount', async () => {
     // set URL with selection and expanded
     window.history.replaceState({}, '', '/workspace?sel=B&expanded=B,C');
     const onSelect = vi.fn();
-    render(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId={null} onSelectNode={onSelect} />);
+    renderWithAppProviders(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId={null} onSelectNode={onSelect} />);
 
     await waitFor(() => expect(onSelect).toHaveBeenCalledWith('B', 'B'));
     // expand called for B and C
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('descendants', 'B', 3));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('descendants', 'C', 3));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('descendants', 'B', 3, undefined, 'hierarchical'));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('descendants', 'C', 3, undefined, 'hierarchical'));
   });
 });

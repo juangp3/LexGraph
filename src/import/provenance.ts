@@ -4,7 +4,21 @@ export interface ProvenanceMetadata {
   createdBy: string;
 }
 
+export interface ProvenanceSummary extends ProvenanceMetadata {
+  isDisputed: boolean;
+  sourceCount: number;
+  sourceTitles: string[];
+}
+
 export type ConflictType = "exact-match" | "partial-match" | "conflicting-value";
+
+interface ProvenanceEvidenceLike {
+  confidence: number;
+  evidenceSummary: string;
+  createdBy: string;
+  isDisputed?: boolean;
+  sourceTitle?: string | null;
+}
 
 export function buildProvenanceMetadata(record: Record<string, unknown>): ProvenanceMetadata {
   const sourceTitle = typeof record.sourceTitle === "string" ? record.sourceTitle : "unknown";
@@ -21,6 +35,32 @@ export function buildProvenanceMetadata(record: Record<string, unknown>): Proven
       .filter(Boolean)
       .join(" | "),
     createdBy: "week4-import"
+  };
+}
+
+export function summarizeProvenance(entries: ProvenanceEvidenceLike[]): ProvenanceSummary {
+  const normalized = entries.filter(Boolean);
+  const bestConfidence = normalized.reduce<number | null>((best, entry) => {
+    if (best === null || entry.confidence > best) {
+      return entry.confidence;
+    }
+    return best;
+  }, null);
+
+  const sourceTitles = normalized
+    .map((entry) => entry.sourceTitle?.trim())
+    .filter((value): value is string => Boolean(value));
+
+  return {
+    confidence: bestConfidence ?? 0.5,
+    evidenceSummary: normalized
+      .map((entry) => entry.evidenceSummary)
+      .filter(Boolean)
+      .join(" | "),
+    createdBy: normalized[0]?.createdBy ?? "week4-import",
+    isDisputed: normalized.some((entry) => entry.isDisputed),
+    sourceCount: sourceTitles.length,
+    sourceTitles,
   };
 }
 

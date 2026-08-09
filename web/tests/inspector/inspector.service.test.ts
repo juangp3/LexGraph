@@ -42,14 +42,18 @@ describe('inspectorService', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/v1/words/cafe%20au%20lait');
   });
 
-  it('throws a useful error for non-200 API responses', async () => {
+  it('returns a graceful fallback for missing word metadata', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: false,
       status: 404,
     } as Response);
 
-    await expect(inspectorService.getWordDetails('missing')).rejects.toThrow(
-      'Failed to fetch word metadata (404)'
-    );
+    await expect(inspectorService.getWordDetails('b580250c-c6e5-49ae-b220-6d0f9c379f84')).resolves.toMatchObject({
+      word: 'b580250c-c6e5-49ae-b220-6d0f9c379f84',
+      language: 'Unknown',
+      meaning: 'Meaning unavailable for this node.',
+      sources: [],
+      ancestry: [{ stage: 'b580250c-c6e5-49ae-b220-6d0f9c379f84', language: 'Unknown' }],
+    });
   });
 });

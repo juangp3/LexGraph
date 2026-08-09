@@ -1,0 +1,26 @@
+[
+  {
+    "id": "exact-father",
+    "query": "father",
+    "expectedTop1": "father",
+    "expectedTop5": ["father"],
+    "acceptableResults": ["father"],
+    "category": "exact"
+  },
+  {
+    "id": "case-father",
+    "query": "Father",
+    "expectedTop1": "father",
+    "expectedTop5": ["father"],
+    "acceptableResults": ["father"],
+    "category": "case"
+  },
+  {
+    "id": "accent-pere",
+    "query": "pere",
+    "expectedTop1": "père",
+    "expectedTop5": ["père"],
+    "acceptableResults": ["père"],
+    "category": "accent"
+  }
+]

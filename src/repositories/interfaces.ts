@@ -172,4 +172,5 @@ export interface WordDetails {
 
 export interface WordDetailsRepository {
   getWordDetails(wordId: string): Promise<WordDetails | null>;
+  getWordDetailsBatch(wordIds: string[]): Promise<Array<WordDetails | null>>;
 }

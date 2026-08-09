@@ -90,6 +90,11 @@ vi.mock('@/features/graph/graph.service', () => ({
 }));
 
 import { GraphCanvas } from '@/features/graph/GraphCanvas';
+import { renderWithAppProviders } from '../helpers/renderWithAppProviders';
+
+vi.mock('@/features/workspace/workspace.service', () => ({
+  getPreferences: vi.fn().mockResolvedValue({ defaultGraphDepth: 3, graphLayout: 'hierarchical' }),
+}));
 
 describe('GraphCanvas arrow-key navigation', () => {
   beforeEach(() => {
@@ -99,7 +104,7 @@ describe('GraphCanvas arrow-key navigation', () => {
 
   it('moves selection to the right with ArrowRight', async () => {
     const onSelect = vi.fn();
-    render(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId={null} onSelectNode={onSelect} />);
+    renderWithAppProviders(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId={null} onSelectNode={onSelect} />);
 
     // ensure nodes rendered
     await waitFor(() => expect(screen.getByText('A')).toBeTruthy());
@@ -113,7 +118,7 @@ describe('GraphCanvas arrow-key navigation', () => {
 
   it('moves selection down with ArrowDown', async () => {
     const onSelect = vi.fn();
-    render(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId={null} onSelectNode={onSelect} />);
+    renderWithAppProviders(<GraphCanvas rootWordId="A" rootWordText="A" selectedNodeId={null} onSelectNode={onSelect} />);
 
     await waitFor(() => expect(screen.getByText('A')).toBeTruthy());
 

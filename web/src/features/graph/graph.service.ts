@@ -55,9 +55,9 @@ function mergeAbortSignals(signal: AbortSignal | undefined, timeoutMs: number): 
   };
 }
 
-async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+async function fetchJson<T>(url: string, signal?: AbortSignal, init?: RequestInit): Promise<T> {
   const { signal: mergedSignal, cleanup } = mergeAbortSignals(signal, GRAPH_TIMEOUT_MS);
-  const response = await fetch(url, { signal: mergedSignal }).finally(cleanup);
+  const response = await fetch(url, { signal: mergedSignal, credentials: 'include', ...init }).finally(cleanup);
   if (!response.ok) {
     throw new Error(`Request failed (${response.status})`);
   }
@@ -102,6 +102,46 @@ async function fetchWordMetadata(wordId: string, signal?: AbortSignal): Promise<
       language: 'Unknown',
     };
   }
+}
+
+async function fetchWordMetadataBatch(wordIds: string[], signal?: AbortSignal): Promise<Map<string, NodeMetadata>> {
+  if (!wordIds.length) {
+    return new Map();
+  }
+
+  try {
+    const response = await fetchJson<{ items: Array<GraphWordDetailsResponse & { id?: string }> }>(
+      `${API_BASE}/v1/words/batch`,
+      signal,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wordIds }),
+      }
+    );
+    const metadata = new Map<string, NodeMetadata>();
+    for (const item of response.items ?? []) {
+      if (!item?.id) continue;
+      metadata.set(item.id, {
+        label: item.textOriginal || item.id,
+        language: item.language || 'Unknown',
+      });
+    }
+
+    if (metadata.size === wordIds.length) {
+      return metadata;
+    }
+  } catch {
+    // fall through to per-word fallback below
+  }
+
+  const fallback = new Map<string, NodeMetadata>();
+  await Promise.all(wordIds.map(async (id) => {
+    const metadata = await fetchWordMetadata(id, signal);
+    fallback.set(id, metadata);
+  }));
+
+  return fallback;
 }
 
 function collectWordIds(rootWordId: string, edges: GraphTraversalEdge[]): string[] {
@@ -263,39 +303,67 @@ function buildFlowGraph(
 ): FlowGraph {
   const nodeIds = collectWordIds(rootWordId, edges);
 
-  const nodes: Node[] = nodeIds.map((id) => ({
-    id,
-    data: {
-      label: metadataById.get(id)?.label ?? id,
-      language: metadataById.get(id)?.language ?? 'Unknown',
-      family: resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown'),
-    },
+  const nodes: Node[] = nodeIds.map((id) => {
+    const nodeMetadata = metadataById.get(id);
+    const relatedEdges = edges.filter((edge) => edge.fromWordId === id || edge.toWordId === id);
+    const highestConfidence = relatedEdges.reduce((best, edge) => {
+      const candidate = edge.confidence ?? edge.provenance?.confidence ?? 0.5;
+      return Math.max(best, candidate);
+    }, 0.5);
+    const evidenceSummary = relatedEdges.find((edge) => edge.evidenceSummary)?.evidenceSummary ?? 'No evidence recorded';
+    const isDisputed = relatedEdges.some((edge) => edge.isDisputed || edge.provenance?.isDisputed);
+    const sourceCount = relatedEdges.reduce((count, edge) => count + (edge.sources?.length ?? 0), 0);
+
+    return {
+      id,
+      data: {
+        label: nodeMetadata?.label ?? id,
+        language: nodeMetadata?.language ?? 'Unknown',
+        family: resolveLanguageFamily(nodeMetadata?.language ?? 'Unknown'),
+        provenance: {
+          confidence: highestConfidence,
+          evidenceSummary,
+          sourceCount,
+          isDisputed,
+        },
+      },
     position: { x: 0, y: 0 },
-    style: {
-      borderRadius: 18,
-      border: `1px solid var(--graph-family-${resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown')})`,
-      background:
-        id === rootWordId
-          ? `color-mix(in srgb, var(--graph-family-${resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown')}) 16%, var(--card))`
-          : `color-mix(in srgb, var(--graph-family-${resolveLanguageFamily(metadataById.get(id)?.language ?? 'Unknown')}) 11%, var(--card))`,
-      color: 'var(--card-foreground)',
-      padding: 12,
-      fontSize: 12,
-      fontWeight: 600,
-      width: NODE_WIDTH,
-      boxShadow:
-        id === rootWordId
-          ? '0 20px 40px -28px rgb(0 0 0 / 0.55)'
-          : '0 14px 28px -28px rgb(0 0 0 / 0.35)',
-    },
-  }));
+      style: {
+        borderRadius: 18,
+        border: `1px solid var(--graph-family-${resolveLanguageFamily(nodeMetadata?.language ?? 'Unknown')})`,
+        background:
+          id === rootWordId
+            ? `color-mix(in srgb, var(--graph-family-${resolveLanguageFamily(nodeMetadata?.language ?? 'Unknown')}) 16%, var(--card))`
+            : `color-mix(in srgb, var(--graph-family-${resolveLanguageFamily(nodeMetadata?.language ?? 'Unknown')}) 11%, var(--card))`,
+        color: 'var(--card-foreground)',
+        padding: 12,
+        fontSize: 12,
+        fontWeight: 600,
+        width: NODE_WIDTH,
+        boxShadow:
+          id === rootWordId
+            ? '0 20px 40px -28px rgb(0 0 0 / 0.55)'
+            : '0 14px 28px -28px rgb(0 0 0 / 0.35)',
+      },
+    };
+  });
 
   const flowEdges: Edge[] = edges.map((edge) => ({
     id: edge.edgeId,
     source: edge.fromWordId,
     target: edge.toWordId,
     label: edge.relationType,
-    data: { relationType: edge.relationType, mode },
+    data: {
+      relationType: edge.relationType,
+      mode,
+      provenance: edge.provenance ?? {
+        confidence: edge.confidence ?? 0.5,
+        evidenceSummary: edge.evidenceSummary ?? 'No evidence recorded',
+        sourceCount: edge.sources?.length ?? 0,
+        sourceTitles: edge.sources?.map((source) => source.sourceId) ?? [],
+        isDisputed: edge.isDisputed ?? false,
+      },
+    },
     animated: false,
     style: {
       opacity: Math.max(0.35, Math.min(1, edge.confidence ?? 0.7)),
@@ -388,32 +456,33 @@ class GraphService {
     const response = await this.fetchTraversal(mode, rootWordId, depth, signal);
     const wordIds = collectWordIds(rootWordId, response.edges);
 
-    const metadata = await Promise.all(
-      wordIds.map(async (id) => [id, await fetchWordMetadata(id, signal)] as const)
-    );
+    const metadata = await fetchWordMetadataBatch(wordIds, signal);
 
-    return buildFlowGraph(rootWordId, response.edges, new Map(metadata), mode, layout);
+    return buildFlowGraph(rootWordId, response.edges, metadata, mode, layout);
   }
 
   async fetchAncestorsFlow(
     rootWordId: string,
     depth = 6,
     fallbackWord?: string | null,
-    signal?: AbortSignal,
+    signalOrLayout?: AbortSignal | GraphLayout,
     layout: GraphLayout = 'hierarchical'
   ): Promise<FlowGraph> {
+    const resolvedSignal = signalOrLayout instanceof AbortSignal ? signalOrLayout : undefined;
+    const resolvedLayout = typeof signalOrLayout === 'string' ? signalOrLayout : layout;
+
     let resolvedRootWordId = rootWordId;
-    let response = await this.fetchTraversal('ancestors', resolvedRootWordId, depth, signal);
+    let response = await this.fetchTraversal('ancestors', resolvedRootWordId, depth, resolvedSignal);
 
     if ((response.edges?.length ?? 0) === 0 && fallbackWord) {
-      const candidates = await this.searchWordCandidates(fallbackWord, signal);
+      const candidates = await this.searchWordCandidates(fallbackWord, resolvedSignal);
       for (const candidate of candidates) {
         const candidateId = candidate.id ?? candidate.wordId ?? '';
         if (!candidateId || candidateId === resolvedRootWordId) {
           continue;
         }
 
-        const candidateResponse = await this.fetchTraversal('ancestors', candidateId, depth, signal);
+        const candidateResponse = await this.fetchTraversal('ancestors', candidateId, depth, resolvedSignal);
         if ((candidateResponse.edges?.length ?? 0) > 0) {
           resolvedRootWordId = candidateId;
           response = candidateResponse;
@@ -424,11 +493,9 @@ class GraphService {
 
     const wordIds = collectWordIds(resolvedRootWordId, response.edges);
 
-    const metadata = await Promise.all(
-      wordIds.map(async (id) => [id, await fetchWordMetadata(id, signal)] as const)
-    );
+    const metadata = await fetchWordMetadataBatch(wordIds, resolvedSignal);
 
-    return buildFlowGraph(resolvedRootWordId, response.edges, new Map(metadata), 'ancestors', layout);
+    return buildFlowGraph(resolvedRootWordId, response.edges, metadata, 'ancestors', resolvedLayout);
   }
 }
 

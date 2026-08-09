@@ -9,6 +9,13 @@ export interface RawRecordReference {
   sourceKey: string;
 }
 
+export interface ImportJobStore {
+  getLatestImportJob(client: RawRecordStoreClient): Promise<Record<string, unknown> | null>;
+  getRecentImportFailures(client: RawRecordStoreClient, limit?: number): Promise<Array<Record<string, unknown>>>;
+  getImportJobDetails(client: RawRecordStoreClient, jobId: string): Promise<Record<string, unknown> | null>;
+  getImportJobRawRecords(client: RawRecordStoreClient, jobId: string, limit?: number): Promise<Array<Record<string, unknown>>>;
+}
+
 export function getPendingRecords(records: RawRecordReference[], seenHashes: Set<string>): RawRecordReference[] {
   return records.filter((record) => {
     const hash = createHash("sha256").update(JSON.stringify(record.payload)).digest("hex");
@@ -38,6 +45,35 @@ export async function getLatestImportJob(client: RawRecordStoreClient) {
   );
 
   return (result as { rows: Array<Record<string, unknown>> }).rows[0] ?? null;
+}
+
+export async function getImportJobDetails(client: RawRecordStoreClient, jobId: string) {
+  const result = await client.query(
+    `
+    SELECT id, source_name, status, rejection_log_path, processed_count, accepted_count, rejected_count, upserted_words, upserted_edges, summary, started_at, completed_at, created_at, updated_at
+    FROM import_jobs
+    WHERE id = $1
+    LIMIT 1
+    `,
+    [jobId]
+  );
+
+  return (result as { rows: Array<Record<string, unknown>> }).rows[0] ?? null;
+}
+
+export async function getImportJobRawRecords(client: RawRecordStoreClient, jobId: string, limit = 50) {
+  const result = await client.query(
+    `
+    SELECT id, source_key, source_hash, payload, created_at
+    FROM raw_import_records
+    WHERE job_id = $1
+    ORDER BY created_at ASC
+    LIMIT $2
+    `,
+    [jobId, limit]
+  );
+
+  return (result as { rows: Array<Record<string, unknown>> }).rows;
 }
 
 export async function getRecentImportFailures(client: RawRecordStoreClient, limit = 5) {

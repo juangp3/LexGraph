@@ -44,7 +44,7 @@ describe('useGraph', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(graphService.fetchAncestorsFlow).toHaveBeenCalledWith('root-id', 4, 'father');
+    expect(graphService.fetchAncestorsFlow).toHaveBeenCalledWith('root-id', 4, 'father', expect.any(AbortSignal), 'hierarchical');
     expect(result.current.data?.nodes[0].data.label).toBe('father');
   });
 });

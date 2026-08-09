@@ -7,6 +7,7 @@ class InMemoryAuthStore implements AuthStore {
   users = new Map<string, AuthStoreUser>();
   byEmail = new Map<string, string>();
   sessions = new Map<string, AuthSessionRecord>();
+  providerLinks = new Map<string, string>();
   seq = 1;
 
   private id() {
@@ -80,6 +81,16 @@ class InMemoryAuthStore implements AuthStore {
     }
 
     return { session, user };
+  }
+
+  async findUserIdByProvider(provider: string, providerUserId: string): Promise<string | null> {
+    const key = `${provider}:${providerUserId}`;
+    return this.providerLinks.get(key) ?? null;
+  }
+
+  async createProviderLink(userId: string, provider: string, providerUserId: string): Promise<void> {
+    const key = `${provider}:${providerUserId}`;
+    this.providerLinks.set(key, userId);
   }
 
   async deleteSession(sessionId: string): Promise<void> {

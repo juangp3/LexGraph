@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, persistAuthToken } from "@/lib/api-client";
 
 export interface AuthUser {
   id: string;
@@ -22,17 +22,21 @@ export interface AuthPayload {
 }
 
 export async function register(input: { email: string; password: string; displayName?: string }): Promise<AuthPayload> {
-  return apiFetch<AuthPayload>("/v1/auth/register", {
+  const payload = await apiFetch<AuthPayload>("/v1/auth/register", {
     method: "POST",
     body: JSON.stringify(input),
   });
+  persistAuthToken(payload.session.accessToken);
+  return payload;
 }
 
 export async function login(input: { email: string; password: string }): Promise<AuthPayload> {
-  return apiFetch<AuthPayload>("/v1/auth/login", {
+  const payload = await apiFetch<AuthPayload>("/v1/auth/login", {
     method: "POST",
     body: JSON.stringify(input),
   });
+  persistAuthToken(payload.session.accessToken);
+  return payload;
 }
 
 export async function fetchMe(token?: string | null): Promise<AuthUser> {
@@ -40,12 +44,20 @@ export async function fetchMe(token?: string | null): Promise<AuthUser> {
 }
 
 export async function logout(token?: string | null): Promise<void> {
-  return apiFetch<void>("/v1/auth/logout", { method: "POST" }, token);
+  try {
+    await apiFetch<void>("/v1/auth/logout", { method: "POST" }, token);
+  } finally {
+    persistAuthToken(null);
+  }
 }
 
 export async function deleteMyAccount(password: string, token?: string | null): Promise<void> {
-  return apiFetch<void>("/v1/me", {
-    method: "DELETE",
-    body: JSON.stringify({ password }),
-  }, token);
+  try {
+    await apiFetch<void>("/v1/me", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
+    }, token);
+  } finally {
+    persistAuthToken(null);
+  }
 }
