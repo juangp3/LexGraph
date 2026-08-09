@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:17
+    build:
+      context: .
+      dockerfile: docker/db/Dockerfile
     container_name: lexgraph-postgres
     environment:
       POSTGRES_DB: lexgraph
@@ -11,18 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/db/init-extensions.sql:/docker-entrypoint-initdb.d/01-init-extensions.sql:ro
-
-  apache-age:
-    image: apache/age:latest
-    container_name: lexgraph-age
-    environment:
-      POSTGRES_DB: lexgraph
-      POSTGRES_USER: lexgraph
-      POSTGRES_PASSWORD: lexgraph
-    ports:
-      - "5434:5432"
-    volumes:
-      - ./scripts/db/init-age.sql:/docker-entrypoint-initdb.d/01-init-age.sql:ro
+      - ./scripts/db/init-age.sql:/docker-entrypoint-initdb.d/02-init-age.sql:ro
 
   redis:
     image: redis:7-alpine
@@ -39,22 +30,17 @@ services:
     container_name: lexgraph-api
     environment:
       DATABASE_URL: postgresql://lexgraph:lexgraph@postgres:5432/lexgraph
-      PORT: 3000
+      PORT: 3001
+      FRONTEND_URLS: http://localhost:3000,http://127.0.0.1:3000
+      GRAPH_MAX_DEPTH: 4
+      GRAPH_MAX_NODES: 500
+      GRAPH_MAX_EDGES: 1000
+      GRAPH_MAX_LIMIT: 100
     ports:
       - "3001:3001"
     depends_on:
       - postgres
       - redis
-
-  web:
-    build:
-      context: .
-      dockerfile: docker/web/Dockerfile
-    container_name: lexgraph-web
-    ports:
-      - "8080:80"
-    depends_on:
-      - api
 
 volumes:
   postgres_data:
