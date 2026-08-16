@@ -1,0 +1,3 @@
+wordroots.duckdns.org {
+    reverse_proxy api:3001
+}

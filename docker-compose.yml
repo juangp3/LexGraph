@@ -42,6 +42,19 @@ services:
       - postgres
       - redis
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: lexgraph-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    depends_on:
+      - api
 volumes:
   postgres_data:
   redis_data:
+  caddy_data:
