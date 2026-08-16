@@ -19,11 +19,11 @@
     "resume:import": "tsx scripts/resume-import.ts",
     "report:import-status": "tsx scripts/report-import-status.ts",
     "infra:doctor": "docker context ls && docker context show && docker --context default version",
-    "infra:up": "docker compose up -d postgres apache-age redis",
+    "infra:up": "docker compose up -d postgres redis",
     "infra:down": "docker compose down",
     "infra:full": "docker compose up -d",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:dev-only": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "db:backup": "tsx scripts/db/backup.ts",
     "db:restore": "tsx scripts/db/restore.ts",
@@ -53,6 +53,8 @@
     "cors": "^2.8.6",
     "express": "^4.19.2",
     "express-rate-limit": "^8.6.2",
+    "prisma": "^6.11.1",
+    "tsx": "^4.23.12",
     "pg": "^8.13.1"
   },
   "devDependencies": {
@@ -63,10 +65,8 @@
     "@types/pg": "^8.11.11",
     "@types/supertest": "^6.0.3",
     "msw": "^2.15.0",
-    "prisma": "^6.11.1",
     "supertest": "^7.0.0",
     "testcontainers": "^10.13.0",
-    "tsx": "^4.23.12",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
