@@ -27,6 +27,8 @@ COPY prisma ./prisma
 # Copy scripts for database migrations
 COPY --from=builder /app/scripts ./scripts
 
+COPY --from=builder /app/src ./src
+
 ENV NODE_ENV=production
 ENV PORT=3001
 
