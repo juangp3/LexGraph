@@ -56,11 +56,15 @@ describe('phase 9 observability', () => {
     const app = createApp();
 
     const health = await request(app).get('/health').expect(200);
-    const ready = await request(app).get('/ready').expect(200);
+    const live = await request(app).get('/health/live').expect(200);
+    const ready = await request(app).get('/health/ready').expect(200);
+    const legacyReady = await request(app).get('/ready').expect(200);
     const version = await request(app).get('/v1/version').expect(200);
 
     expect(health.body.ok).toBe(true);
+    expect(live.body.ok).toBe(true);
     expect(ready.body.ok).toBe(true);
+    expect(legacyReady.body.ok).toBe(true);
     expect(version.body.service).toBe('lexgraph-api');
     expect(version.body.version).toBeTruthy();
   });

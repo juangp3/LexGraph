@@ -36,6 +36,11 @@ const SERVICE_VERSION = process.env.APP_VERSION ?? process.env.npm_package_versi
 const DATASET_VERSION = process.env.DATASET_VERSION ?? '2026-08';
 const DEFAULT_QUERY_TIMEOUT_MS = Number(process.env.API_QUERY_TIMEOUT_MS ?? 2000);
 const GRAPH_QUERY_TIMEOUT_MS = Number(process.env.GRAPH_QUERY_TIMEOUT_MS ?? 4000);
+const DEFAULT_GRAPH_DEPTH_LIMIT = Number(process.env.GRAPH_MAX_DEPTH ?? 4);
+const DEFAULT_GRAPH_NODE_LIMIT = Number(process.env.GRAPH_MAX_NODES ?? 500);
+const DEFAULT_GRAPH_EDGE_LIMIT = Number(process.env.GRAPH_MAX_EDGES ?? 1000);
+const DEFAULT_GRAPH_MAX_LIMIT = Number(process.env.GRAPH_MAX_LIMIT ?? 100);
+const DEFAULT_GRAPH_MAX_DEPTH = 10;
 const SEARCH_TTL_MS = Number(process.env.SEARCH_CACHE_TTL_MS ?? 60_000);
 const WORD_DETAIL_TTL_MS = Number(process.env.WORD_CACHE_TTL_MS ?? 5 * 60_000);
 const GRAPH_EXPAND_TTL_MS = Number(process.env.GRAPH_EXPAND_CACHE_TTL_MS ?? 5 * 60_000);
@@ -90,11 +95,11 @@ function graphClientKey(req: express.Request): string {
 
 function parseDepth(raw: unknown): number | null {
   const parsed = Number(raw ?? 4);
-  if (!Number.isFinite(parsed) || parsed < 1 || parsed > 10) {
+  if (!Number.isFinite(parsed) || parsed < 1) {
     return null;
   }
 
-  return Math.floor(parsed);
+  return Math.max(1, Math.min(Math.floor(parsed), DEFAULT_GRAPH_MAX_DEPTH));
 }
 
 function validateGraphRequest(wordId: string, rawDepth: unknown) {
@@ -251,15 +256,28 @@ export function createApp(dependencies: AppDependencies = {}) {
   });
 
   app.get("/health", (_req, res) => {
+    res.status(200).json({ ok: true, service: "lexgraph-api", version: SERVICE_VERSION, datasetVersion: DATASET_VERSION, checks: { live: true } });
+  });
+
+  app.get("/health/live", (_req, res) => {
     res.status(200).json({ ok: true, service: "lexgraph-api", version: SERVICE_VERSION, datasetVersion: DATASET_VERSION });
+  });
+
+  app.get("/health/ready", async (_req, res) => {
+    try {
+      await dbPool.query('SELECT 1');
+      return res.status(200).json({ ok: true, service: 'lexgraph-api', version: SERVICE_VERSION, datasetVersion: DATASET_VERSION, checks: { database: true } });
+    } catch (error) {
+      return res.status(503).json({ ok: false, service: 'lexgraph-api', version: SERVICE_VERSION, datasetVersion: DATASET_VERSION, checks: { database: false }, error: String(error) });
+    }
   });
 
   app.get("/ready", async (_req, res) => {
     try {
       await dbPool.query('SELECT 1');
-      return res.status(200).json({ ok: true, service: 'lexgraph-api', version: SERVICE_VERSION, datasetVersion: DATASET_VERSION });
+      return res.status(200).json({ ok: true, service: 'lexgraph-api', version: SERVICE_VERSION, datasetVersion: DATASET_VERSION, checks: { database: true } });
     } catch (error) {
-      return res.status(503).json({ ok: false, service: 'lexgraph-api', version: SERVICE_VERSION, datasetVersion: DATASET_VERSION, error: String(error) });
+      return res.status(503).json({ ok: false, service: 'lexgraph-api', version: SERVICE_VERSION, datasetVersion: DATASET_VERSION, checks: { database: false }, error: String(error) });
     }
   });
 
@@ -447,7 +465,7 @@ export function createApp(dependencies: AppDependencies = {}) {
       ? req.query.entityTypes.split(",").map((value) => value.trim()).filter(Boolean)
       : undefined;
     const limit = Number(req.query.limit ?? 25);
-    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit), 100)) : 25;
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit), DEFAULT_GRAPH_MAX_LIMIT)) : 25;
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const depth = parseDepth(req.query.depth);
     if (depth === null) {
@@ -472,7 +490,8 @@ export function createApp(dependencies: AppDependencies = {}) {
       });
     }
 
-    const cacheKey = graphExpandCacheKey({ entityId, direction, depth, relationshipTypes, entityTypes, limit: safeLimit, cursor });
+    const safeDepth = Math.max(1, Math.min(depth, DEFAULT_GRAPH_MAX_DEPTH));
+    const cacheKey = graphExpandCacheKey({ entityId, direction, depth: safeDepth, relationshipTypes, entityTypes, limit: safeLimit, cursor });
     const cached = cacheLookup<unknown>(cache, cacheKey);
     if (cached.hit && cached.value) {
       return res.status(200).set('X-Request-ID', requestId).json(cached.value);
@@ -481,12 +500,12 @@ export function createApp(dependencies: AppDependencies = {}) {
     graphConcurrency.set(clientKey, activeGraphRequests + 1);
     try {
       const result = await withTimeout(
-        graphService.expand({ entityId, direction, depth, relationshipTypes, entityTypes, limit: safeLimit, cursor }),
+        graphService.expand({ entityId, direction, depth: safeDepth, relationshipTypes, entityTypes, limit: safeLimit, cursor }),
         GRAPH_QUERY_TIMEOUT_MS,
       );
       metrics.recordGraph({
         durationMs: Date.now() - startedAt,
-        depth,
+        depth: safeDepth,
         nodesReturned: result.nodes.length,
         edgesReturned: result.edges.length,
         truncated: Boolean(result.meta?.truncated),
@@ -495,7 +514,7 @@ export function createApp(dependencies: AppDependencies = {}) {
       return res.status(200).set("X-Request-ID", requestId).json(result);
     } catch (error) {
       if (error instanceof TimeoutError) {
-        metrics.recordGraph({ durationMs: Date.now() - startedAt, depth, nodesReturned: 0, edgesReturned: 0, truncated: false, statusCode: 504 });
+        metrics.recordGraph({ durationMs: Date.now() - startedAt, depth: safeDepth, nodesReturned: 0, edgesReturned: 0, truncated: false, statusCode: 504 });
         return res.status(504).set('X-Request-ID', requestId).json({
           error: {
             code: 'QUERY_TIMEOUT',
@@ -505,7 +524,7 @@ export function createApp(dependencies: AppDependencies = {}) {
         });
       }
 
-      metrics.recordGraph({ durationMs: Date.now() - startedAt, depth, nodesReturned: 0, edgesReturned: 0, truncated: false, statusCode: 500 });
+      metrics.recordGraph({ durationMs: Date.now() - startedAt, depth: safeDepth, nodesReturned: 0, edgesReturned: 0, truncated: false, statusCode: 500 });
       return res.status(500).set('X-Request-ID', requestId).json({
         error: {
           code: 'INTERNAL_ERROR',
@@ -538,7 +557,7 @@ export function createApp(dependencies: AppDependencies = {}) {
     }
 
     const limit = Number(req.query.limit ?? 25);
-    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit), 100)) : 25;
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit), DEFAULT_GRAPH_MAX_LIMIT)) : 25;
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
     const relationships = await graphRepository.findRelationships(entityId, { limit: safeLimit, cursor });
 

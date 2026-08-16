@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: lexgraph
       POSTGRES_USER: lexgraph
-      POSTGRES_PASSWORD: lexgraph
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
@@ -29,9 +29,9 @@ services:
       dockerfile: docker/api/Dockerfile
     container_name: lexgraph-api
     environment:
-      DATABASE_URL: postgresql://lexgraph:lexgraph@postgres:5432/lexgraph
+      DATABASE_URL: postgresql://lexgraph:${POSTGRES_PASSWORD}@postgres:5432/lexgraph
       PORT: 3001
-      FRONTEND_URLS: http://localhost:3000,http://127.0.0.1:3000
+      FRONTEND_URLS: https://wordroots.vercel.app,https://wordroots.duckdns.org
       GRAPH_MAX_DEPTH: 4
       GRAPH_MAX_NODES: 500
       GRAPH_MAX_EDGES: 1000

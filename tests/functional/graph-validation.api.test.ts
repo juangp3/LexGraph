@@ -86,12 +86,12 @@ describe("graph endpoint validation", () => {
     expect(response.body.message).toContain("Invalid wordId");
   });
 
-  it("rejects out-of-range depth with 400", async () => {
+  it("caps out-of-range depth to the deployment-safe bound", async () => {
     const app = createApp();
     const response = await request(app).get(`/v1/graph/ancestors/${validUuid}?depth=99`);
 
-    expect(response.status).toBe(400);
-    expect(response.body.message).toContain("Invalid depth");
+    expect(response.status).toBe(200);
+    expect(response.body.depth).toBe(10);
   });
 
   it("returns consistent success contract for all graph traversal routes", async () => {

@@ -119,6 +119,16 @@ describe("Phase 7 graph API contract", () => {
     expect(response.body.relationships[0]).toMatchObject({ relationType: "COGNATE_WITH" });
   });
 
+  it("caps graph expansion depth and pagination to deployment-safe bounds", async () => {
+    const app = createApp({ graphRepository });
+    const response = await request(app).get(`/v1/graph/${validUuid}/expand?direction=ancestors&depth=999&limit=999`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.meta.limits.maxDepth).toBeLessThanOrEqual(10);
+    expect(response.body.meta.pagination.limit).toBeLessThanOrEqual(100);
+    expect(response.body.meta.expansion.depth).toBeLessThanOrEqual(10);
+  });
+
   it("supports cursor-based pagination for relationships", async () => {
     const app = createApp({ graphRepository });
     const response = await request(app).get(`/v1/entities/${validUuid}/relationships?limit=1&cursor=abc`);
