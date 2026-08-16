@@ -16,7 +16,6 @@ web
 tests
 scripts
 public
-prisma/migrations
 *.md
 !README.md
 .github
