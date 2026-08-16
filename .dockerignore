@@ -13,7 +13,12 @@ logs
 docker
 docs
 web
-tests
+tests/unit
+tests/component
+tests/functional
+tests/integration
+tests/system
+tests/performance
 public
 *.md
 !README.md

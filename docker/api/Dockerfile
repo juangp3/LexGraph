@@ -28,6 +28,7 @@ COPY prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/tests/fixtures ./tests/fixtures
 
 ENV NODE_ENV=production
 ENV PORT=3001
