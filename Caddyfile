@@ -1,3 +1,6 @@
 wordroots.duckdns.org {
-    reverse_proxy api:3001
+    @api path /v1/*
+    reverse_proxy @api api:3001
+    # Proxy all other requests to the Next.js frontend running on the host
+    reverse_proxy localhost:3000
 }
