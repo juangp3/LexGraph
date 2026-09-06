@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api-client";
 import { useAuthSession } from "@/features/auth/auth-session";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+
+interface AuthProvidersStatus {
+  github: { configured: boolean };
+  google: { configured: boolean };
+}
 
 function formatError(error: unknown): string {
   if (error instanceof ApiError) {
@@ -29,7 +36,62 @@ function AuthContent() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [providers, setProviders] = useState<AuthProvidersStatus>({
+    github: { configured: false },
+    google: { configured: false },
+  });
   const nextTarget = searchParams.get("next");
+  useEffect(() => {
+    const requested = searchParams.get("mode");
+    if (requested === "login" || requested === "register") {
+      setMode(requested);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let active = true;
+
+    fetch(`${API_BASE}/v1/auth/providers`, { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load providers (${response.status})`);
+        }
+        return response.json() as Promise<AuthProvidersStatus>;
+      })
+      .then((data) => {
+        if (!active) return;
+        setProviders({
+          github: { configured: Boolean(data?.github?.configured) },
+          google: { configured: Boolean(data?.google?.configured) },
+        });
+      })
+      .catch(() => {
+        if (!active) return;
+        setProviders({
+          github: { configured: false },
+          google: { configured: false },
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const oauthNextSuffix = nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : "";
+
+  const startOauth = (provider: "github" | "google") => {
+    const configured = provider === "github" ? providers.github.configured : providers.google.configured;
+    if (!configured) {
+      showToast({
+        title: "OAuth unavailable",
+        description: `${provider === "github" ? "GitHub" : "Google"} OAuth is not configured in this environment. Use email/password sign-in.`,
+      });
+      return;
+    }
+
+    window.location.href = `${API_BASE}/v1/auth/oauth/${provider}${oauthNextSuffix}`;
+  };
 
   const submit = async () => {
     setIsBusy(true);
@@ -97,29 +159,39 @@ function AuthContent() {
             {isBusy ? "Submitting..." : mode === "register" ? "Create account" : "Sign in"}
           </Button>
           <div className="mt-2 space-y-2">
-            <a
-              href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001"}/v1/auth/oauth/github${nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ""}`}
-              className="inline-block w-full"
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              data-icon="inline-start"
+              disabled={!providers.github.configured}
+              onClick={() => startOauth("github")}
             >
-              <Button type="button" variant="outline" className="w-full" data-icon="inline-start">
-                <span className="flex items-center gap-2">
-                  <img src="/icons/github.svg" alt="" className="size-4" />
-                  Continue with GitHub
-                </span>
-              </Button>
-            </a>
+              <span className="flex items-center gap-2">
+                <img src="/icons/github.svg" alt="" className="size-4" />
+                Continue with GitHub
+              </span>
+            </Button>
 
-            <a
-              href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001"}/v1/auth/oauth/google${nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ""}`}
-              className="inline-block w-full"
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              data-icon="inline-start"
+              disabled={!providers.google.configured}
+              onClick={() => startOauth("google")}
             >
-              <Button type="button" variant="outline" className="w-full" data-icon="inline-start">
-                <span className="flex items-center gap-2">
-                  <img src="/icons/google.svg" alt="" className="size-4" />
-                  Continue with Google
-                </span>
-              </Button>
-            </a>
+              <span className="flex items-center gap-2">
+                <img src="/icons/google.svg" alt="" className="size-4" />
+                Continue with Google
+              </span>
+            </Button>
+
+            {!providers.github.configured || !providers.google.configured ? (
+              <p className="text-xs text-muted-foreground">
+                OAuth providers are disabled in this environment. Use email/password to sign in locally.
+              </p>
+            ) : null}
           </div>
         </div>
       </section>

@@ -1,5 +1,8 @@
 import { WorkspaceSearch } from "@/features/workspace/components/WorkspaceSearch";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
+import { AuthMenu } from "@/features/auth/components/AuthMenu";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const FEATURED_EXAMPLES = [
   { word: "father", label: "father" },
@@ -19,6 +22,7 @@ export default function Home() {
           </div>
           <div className="hidden items-center gap-3 md:flex">
             <ThemeToggle />
+            <AuthMenu />
             <span className="lex-chip">Search</span>
             <span className="lex-chip">Workspace</span>
           </div>
@@ -46,6 +50,8 @@ export default function Home() {
               autoFocus
               placeholder="Search words, languages, roots, or meanings..."
             />
+
+            {/* Auth buttons removed — use header AuthMenu for sign in / account */}
 
             <div className="flex flex-wrap gap-3">
               {FEATURED_EXAMPLES.map((example) => (

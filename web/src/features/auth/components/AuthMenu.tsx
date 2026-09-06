@@ -25,11 +25,16 @@ export function AuthMenu() {
 
   if (!isAuthenticated || !user) {
     return (
-      <Link href={authHref} className="inline-flex">
-        <Button type="button" variant="outline" size="sm" data-testid="auth-open-button">
-          Sign in
-        </Button>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link href="/auth?mode=register" className="inline-flex">
+          <Button type="button" variant="default" size="sm">Create account</Button>
+        </Link>
+        <Link href={authHref} className="inline-flex">
+          <Button type="button" variant="outline" size="sm" data-testid="auth-open-button">
+            Sign in
+          </Button>
+        </Link>
+      </div>
     );
   }
 
