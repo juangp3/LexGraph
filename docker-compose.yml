@@ -28,10 +28,19 @@ services:
       context: .
       dockerfile: docker/api/Dockerfile
     container_name: lexgraph-api
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://lexgraph:${POSTGRES_PASSWORD}@postgres:5432/lexgraph
       PORT: 3001
-      FRONTEND_URLS: https://wordroots.vercel.app,https://wordroots.duckdns.org
+      API_BASE_URL: ${API_BASE_URL:-https://wordroots.duckdns.org}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://wordroots-livid.vercel.app}
+      FRONTEND_URLS: https://wordroots-livid.vercel.app,https://wordroots.duckdns.org
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
+      GOOGLE_OAUTH_CALLBACK: ${GOOGLE_OAUTH_CALLBACK:-https://wordroots.duckdns.org/v1/auth/oauth/google/callback}
       GRAPH_MAX_DEPTH: 4
       GRAPH_MAX_NODES: 500
       GRAPH_MAX_EDGES: 1000
