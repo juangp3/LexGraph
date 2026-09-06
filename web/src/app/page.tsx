@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { WorkspaceSearch } from "@/features/workspace/components/WorkspaceSearch";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
 import { AuthMenu } from "@/features/auth/components/AuthMenu";
@@ -22,7 +23,9 @@ export default function Home() {
           </div>
           <div className="hidden items-center gap-3 md:flex">
             <ThemeToggle />
-            <AuthMenu />
+            <Suspense fallback={<span className="text-xs text-muted-foreground">Checking session...</span>}>
+              <AuthMenu />
+            </Suspense>
             <span className="lex-chip">Search</span>
             <span className="lex-chip">Workspace</span>
           </div>
