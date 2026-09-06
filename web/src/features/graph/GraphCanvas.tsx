@@ -67,13 +67,20 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
   const [hoverInfo, setHoverInfo] = useState<{ visible: boolean; x: number; y: number; label?: string } | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [showProvenanceOverlay, setShowProvenanceOverlay] = useState<boolean>(false);
+  const updateOverlay = useCallback(() => setShowProvenanceOverlay(typeof window !== 'undefined' ? window.innerWidth < 1024 : false), []);
   const showToast = useToast();
   const stableNodeTypes = useMemo(() => NODE_TYPES, []);
   const stableEdgeTypes = useMemo(() => EDGE_TYPES, []);
 
   useEffect(() => {
+    updateOverlay();
+    window.addEventListener('resize', updateOverlay);
     resetRelationFilters();
-  }, [rootWordId, resetRelationFilters]);
+    return () => {
+      window.removeEventListener('resize', updateOverlay);
+    };
+  }, [rootWordId, resetRelationFilters, updateOverlay]);
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -539,6 +546,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
       window.removeEventListener('lexgraph:centerSelection' as any, onCenterSelection as EventListener);
       window.removeEventListener('lexgraph:toggleMiniMap' as any, onToggleMiniMap as EventListener);
       window.removeEventListener('click', onGlobalClick);
+      window.removeEventListener('resize', updateOverlay);
     };
   }, [reactFlow, selectedNodeId, collapseSelectedBranch]);
 
@@ -592,9 +600,9 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
 
   return (
     <section className="lex-card rounded-[var(--radius-2xl)] p-2" aria-label="Graph workspace">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-2 py-1">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-2 px-2 py-1">
         <h2 className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Interactive Graph</h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="relative z-30 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => reactFlow.fitView({ padding: 0.2 })}
@@ -635,7 +643,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 px-2 pb-2">
+      <div className="relative z-30 flex flex-wrap items-center gap-2 px-2 pb-2">
         {(Object.keys(relationFilters) as GraphMode[]).map((mode) => (
           <button
             key={mode}
@@ -689,7 +697,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
         >
           <Background gap={20} size={1} />
           {showMiniMap && <MiniMap pannable zoomable nodeStrokeWidth={3} />}
-          <Controls showFitView showZoom showInteractive />
+          <Controls position="bottom-right" showFitView showZoom showInteractive className="!right-4 !bottom-4" />
         </ReactFlow>
       </div>
       {hasMoreNodes && (
@@ -770,7 +778,7 @@ function GraphCanvasInner({ rootWordId, rootWordText, selectedNodeId, onSelectNo
           {hoverInfo.label}
         </div>
       )}
-      {(selectedNode || selectedEdge) && (
+      {(selectedNode || selectedEdge) && showProvenanceOverlay && (
         <div className="absolute bottom-4 left-4 z-20 max-w-sm rounded-lg border border-border bg-background/95 p-3 shadow-lg">
           <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Provenance</div>
           {selectedNode ? (

@@ -34,8 +34,16 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
   const refreshMe = useCallback(async () => {
     const persistedToken = getPersistedAuthToken();
     if (!persistedToken) {
-      clearSession();
-      return;
+      // No stored token: try cookie-based session (OAuth server cookie)
+      try {
+        const me = await fetchMe();
+        applySession(me);
+        return;
+      } catch (error) {
+        // No cookie session either
+        clearSession();
+        return;
+      }
     }
 
     try {
@@ -54,9 +62,17 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     const run = async () => {
       const persistedToken = getPersistedAuthToken();
+
       if (!persistedToken) {
-        clearSession();
-        setIsLoading(false);
+        // Try cookie-based session (OAuth)
+        try {
+          const me = await fetchMe();
+          applySession(me);
+        } catch {
+          clearSession();
+        } finally {
+          setIsLoading(false);
+        }
         return;
       }
 

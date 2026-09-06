@@ -91,7 +91,7 @@ function Workspace() {
 
         <div className="relative overflow-hidden border-border/60 lg:border-r">
           {!auth.isAuthenticated ? (
-            <div className="absolute inset-x-3 top-3 z-20 rounded-xl border border-border/70 bg-background/95 p-3 text-sm text-foreground shadow-[var(--shadow-raised)] backdrop-blur">
+            <div className="mb-3 rounded-xl border border-border/70 bg-background/95 p-3 text-sm text-foreground shadow-[var(--shadow-raised)] backdrop-blur">
               Save, collections, notes, and export require authentication.
               <Link href={authHref} className="ml-2 inline-flex text-primary underline underline-offset-2">Sign in</Link>
             </div>

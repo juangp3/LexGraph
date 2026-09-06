@@ -3,6 +3,29 @@ import rateLimit from "express-rate-limit";
 import { AuthError, AuthOrchestrator } from "../auth/auth.orchestrator.js";
 import { requireAuth } from "../auth/auth.middleware.js";
 
+function getOauthStateCookieName(provider: "github" | "google"): string {
+  const base = process.env.OAUTH_STATE_COOKIE_NAME ?? "oauth_state";
+  return `${base}_${provider}`;
+}
+
+function readCookieValue(cookieHeader: string, name: string): string | null {
+  const cookie = cookieHeader
+    .split(";")
+    .map((value) => value.trim())
+    .find((value) => value.startsWith(`${name}=`));
+
+  if (!cookie) {
+    return null;
+  }
+
+  const rawValue = cookie.split("=").slice(1).join("=");
+  try {
+    return decodeURIComponent(rawValue);
+  } catch {
+    return rawValue;
+  }
+}
+
 function getClientIp(req: { ip?: string; headers: Record<string, unknown> }): string | null {
   const forwardedFor = req.headers["x-forwarded-for"];
   if (typeof forwardedFor === "string" && forwardedFor.trim()) {
@@ -14,6 +37,20 @@ function getClientIp(req: { ip?: string; headers: Record<string, unknown> }): st
 
 export function buildAuthRouter(auth: AuthOrchestrator): Router {
   const router = Router();
+
+  router.get("/providers", (_req, res) => {
+    const githubConfigured = Boolean(
+      process.env.GITHUB_OAUTH_CLIENT_ID && process.env.GITHUB_OAUTH_CLIENT_SECRET,
+    );
+    const googleConfigured = Boolean(
+      process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    );
+
+    return res.status(200).json({
+      github: { configured: githubConfigured },
+      google: { configured: googleConfigured },
+    });
+  });
 
   const authLimiter = rateLimit({
     windowMs: 60 * 1000,
@@ -128,7 +165,7 @@ export function buildAuthRouter(auth: AuthOrchestrator): Router {
     const stateCookieVal = `${nonce}:${encodedNext}`;
     const cookieOpts: Record<string, any> = { httpOnly: true, path: "/", sameSite: "lax" };
     if (process.env.NODE_ENV === "production") cookieOpts.secure = true;
-    res.cookie(process.env.OAUTH_STATE_COOKIE_NAME ?? "oauth_state", stateCookieVal, cookieOpts);
+    res.cookie(getOauthStateCookieName("github"), stateCookieVal, cookieOpts);
 
     const params = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri, scope: "user:email", state: nonce });
     return res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
@@ -140,13 +177,12 @@ export function buildAuthRouter(auth: AuthOrchestrator): Router {
       const state = String(req.query?.state ?? "");
 
       // Validate state against cookie
-      const stateCookie = String(req.headers.cookie ?? "").split(";").map(s => s.trim()).find(s => s.startsWith((process.env.OAUTH_STATE_COOKIE_NAME ?? "oauth_state") + "="));
+      const stateCookie = readCookieValue(String(req.headers.cookie ?? ""), getOauthStateCookieName("github"));
       let nextPath = "/workspace";
       if (!stateCookie) {
         return res.status(400).json({ error: { code: "OAUTH_STATE_MISSING", message: "Missing oauth state cookie." } });
       }
-      const cookieVal = stateCookie.split("=").slice(1).join("=");
-      const [nonce, encodedNext] = cookieVal.split(":");
+      const [nonce, encodedNext] = stateCookie.split(":");
       if (!nonce || nonce !== state) {
         return res.status(400).json({ error: { code: "OAUTH_STATE_MISMATCH", message: "Invalid oauth state." } });
       }
@@ -231,9 +267,21 @@ export function buildAuthRouter(auth: AuthOrchestrator): Router {
       res.cookie(cookieName, result.session.accessToken, cookieOpts);
 
       // clear oauth state cookie
-      res.cookie(process.env.OAUTH_STATE_COOKIE_NAME ?? "oauth_state", "", { httpOnly: true, path: "/", expires: new Date(0) });
+      res.cookie(getOauthStateCookieName("github"), "", { httpOnly: true, path: "/", expires: new Date(0) });
       return res.redirect(`${frontendBase}/auth/oauth-callback?next=${encodeURIComponent(nextPath)}`);
     } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error("GITHUB_OAUTH_CALLBACK_FAILED", {
+        detail,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      if (process.env.NODE_ENV !== "production") {
+        return res.status(500).json({
+          error: { code: "OAUTH_ERROR", message: "OAuth callback failed.", detail },
+        });
+      }
+
       return res.status(500).json({ error: { code: "OAUTH_ERROR", message: "OAuth callback failed." } });
     }
   });
@@ -253,7 +301,7 @@ export function buildAuthRouter(auth: AuthOrchestrator): Router {
     const stateCookieVal = `${nonce}:${encodedNext}`;
     const cookieOpts: Record<string, any> = { httpOnly: true, path: "/", sameSite: "lax" };
     if (process.env.NODE_ENV === "production") cookieOpts.secure = true;
-    res.cookie(process.env.OAUTH_STATE_COOKIE_NAME ?? "oauth_state", stateCookieVal, cookieOpts);
+    res.cookie(getOauthStateCookieName("google"), stateCookieVal, cookieOpts);
 
     const params = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri, response_type: "code", scope: "openid email profile", state: nonce });
     return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
@@ -264,12 +312,11 @@ export function buildAuthRouter(auth: AuthOrchestrator): Router {
       const code = String(req.query?.code ?? "");
       const state = String(req.query?.state ?? "");
 
-      const stateCookie = String(req.headers.cookie ?? "").split(";").map(s => s.trim()).find(s => s.startsWith((process.env.OAUTH_STATE_COOKIE_NAME ?? "oauth_state") + "="));
+      const stateCookie = readCookieValue(String(req.headers.cookie ?? ""), getOauthStateCookieName("google"));
       if (!stateCookie) {
         return res.status(400).json({ error: { code: "OAUTH_STATE_MISSING", message: "Missing oauth state cookie." } });
       }
-      const cookieVal = stateCookie.split("=").slice(1).join("=");
-      const [nonce, encodedNext] = cookieVal.split(":");
+      const [nonce, encodedNext] = stateCookie.split(":");
       if (!nonce || nonce !== state) {
         return res.status(400).json({ error: { code: "OAUTH_STATE_MISMATCH", message: "Invalid oauth state." } });
       }
@@ -338,9 +385,21 @@ export function buildAuthRouter(auth: AuthOrchestrator): Router {
       res.cookie(cookieName, result.session.accessToken, cookieOpts);
 
       // clear oauth state cookie
-      res.cookie(process.env.OAUTH_STATE_COOKIE_NAME ?? "oauth_state", "", { httpOnly: true, path: "/", expires: new Date(0) });
+      res.cookie(getOauthStateCookieName("google"), "", { httpOnly: true, path: "/", expires: new Date(0) });
       return res.redirect(`${frontendBase}/auth/oauth-callback?next=${encodeURIComponent(nextPath)}`);
     } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error("GOOGLE_OAUTH_CALLBACK_FAILED", {
+        detail,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      if (process.env.NODE_ENV !== "production") {
+        return res.status(500).json({
+          error: { code: "OAUTH_ERROR", message: "OAuth callback failed.", detail },
+        });
+      }
+
       return res.status(500).json({ error: { code: "OAUTH_ERROR", message: "OAuth callback failed." } });
     }
   });

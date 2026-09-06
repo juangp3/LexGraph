@@ -102,17 +102,77 @@ function parseDepth(raw: unknown): number | null {
   return Math.max(1, Math.min(Math.floor(parsed), DEFAULT_GRAPH_MAX_DEPTH));
 }
 
-function validateGraphRequest(wordId: string, rawDepth: unknown) {
-  if (!UUID_V4_OR_V1_REGEX.test(wordId)) {
-    return { ok: false as const, message: "Invalid wordId. Expected UUID." };
-  }
-
+function validateGraphDepth(rawDepth: unknown) {
   const depth = parseDepth(rawDepth);
   if (depth === null) {
     return { ok: false as const, message: "Invalid depth. Use an integer between 1 and 10." };
   }
 
   return { ok: true as const, depth };
+}
+
+function normalizeWordLookupInput(input: string): string {
+  return input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+async function resolveWordIdFromParam(wordRef: string): Promise<string | null> {
+  const trimmed = String(wordRef ?? "").trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (UUID_V4_OR_V1_REGEX.test(trimmed)) {
+    return trimmed;
+  }
+
+  const normalized = normalizeWordLookupInput(trimmed);
+  if (!normalized) {
+    return null;
+  }
+
+  const exactResult = await dbPool.query<{ id: string }>(
+    `
+    SELECT id
+    FROM words
+    WHERE text_normalized = $1
+       OR text_ascii_folded = $1
+       OR unaccent(lower(text_original)) = $1
+    ORDER BY created_at ASC
+    LIMIT 1
+    `,
+    [normalized],
+  );
+
+  if (exactResult.rows[0]?.id) {
+    return exactResult.rows[0].id;
+  }
+
+  const fallbackResult = await dbPool.query<{ id: string }>(
+    `
+    SELECT id
+    FROM words
+    WHERE text_normalized LIKE ($1 || '%')
+       OR text_ascii_folded LIKE ($1 || '%')
+       OR unaccent(lower(text_original)) LIKE ('%' || $1 || '%')
+    ORDER BY
+      (text_normalized LIKE ($1 || '%') OR text_ascii_folded LIKE ($1 || '%')) DESC,
+      GREATEST(
+        similarity(text_normalized, $1),
+        similarity(text_ascii_folded, $1),
+        similarity(unaccent(lower(text_original)), $1)
+      ) DESC,
+      char_length(text_original) ASC
+    LIMIT 1
+    `,
+    [normalized],
+  );
+
+  return fallbackResult.rows[0]?.id ?? null;
 }
 
 interface AppDependencies {
@@ -578,19 +638,19 @@ export function createApp(dependencies: AppDependencies = {}) {
   });
 
   app.get("/v1/words/:wordId/provenance", async (req, res) => {
-    const { wordId } = req.params;
-    if (!UUID_V4_OR_V1_REGEX.test(wordId)) {
-      return res.status(400).json({ message: "Invalid wordId. Expected UUID." });
+    const resolvedWordId = await resolveWordIdFromParam(req.params.wordId);
+    if (!resolvedWordId) {
+      return res.status(404).json({ message: "Word not found" });
     }
 
     try {
-      const details = await withTimeout(wordDetailsRepository.getWordDetails(wordId), DEFAULT_QUERY_TIMEOUT_MS);
+      const details = await withTimeout(wordDetailsRepository.getWordDetails(resolvedWordId), DEFAULT_QUERY_TIMEOUT_MS);
       if (!details) {
         return res.status(404).json({ message: "Word not found" });
       }
 
       const summary = {
-        wordId,
+        wordId: resolvedWordId,
         confidence: details.confidence?.value ?? 0.5,
         evidenceSummary: details.sources.map((source) => `${source.title} (${source.sourceLocator ?? "unknown"})`).join(" | ") || "No evidence recorded",
         sourceCount: details.sources.length,
@@ -608,19 +668,19 @@ export function createApp(dependencies: AppDependencies = {}) {
   });
 
   app.get("/v1/words/:wordId", async (req, res) => {
-    const { wordId } = req.params;
-    if (!UUID_V4_OR_V1_REGEX.test(wordId)) {
-      return res.status(400).json({ message: "Invalid wordId. Expected UUID." });
+    const resolvedWordId = await resolveWordIdFromParam(req.params.wordId);
+    if (!resolvedWordId) {
+      return res.status(404).json({ message: "Word not found" });
     }
 
     try {
-      const cacheKey = wordDetailCacheKey(wordId);
+      const cacheKey = wordDetailCacheKey(resolvedWordId);
       const cached = cacheLookup<unknown>(cache, cacheKey);
       if (cached.hit && cached.value) {
         return res.status(200).json(cached.value);
       }
 
-      const details = await withTimeout(wordDetailsRepository.getWordDetails(wordId), DEFAULT_QUERY_TIMEOUT_MS);
+      const details = await withTimeout(wordDetailsRepository.getWordDetails(resolvedWordId), DEFAULT_QUERY_TIMEOUT_MS);
       if (!details) {
         return res.status(404).json({ message: "Word not found" });
       }
@@ -666,60 +726,76 @@ export function createApp(dependencies: AppDependencies = {}) {
   });
 
   app.get("/v1/graph/ancestors/:wordId", async (req, res) => {
-    const validation = validateGraphRequest(req.params.wordId, req.query.depth);
+    const validation = validateGraphDepth(req.query.depth);
     if (!validation.ok) {
       return res.status(400).json({ message: validation.message });
     }
 
     try {
+      const resolvedWordId = await resolveWordIdFromParam(req.params.wordId);
+      if (!resolvedWordId) {
+        return res.status(404).json({ message: "Word not found" });
+      }
       const depth = validation.depth;
-      const edges = await graphRepository.findAncestors(req.params.wordId, depth);
-      res.status(200).json({ wordId: req.params.wordId, depth, edges });
+      const edges = await graphRepository.findAncestors(resolvedWordId, depth);
+      res.status(200).json({ wordId: resolvedWordId, depth, edges });
     } catch (error) {
       res.status(500).json({ message: "Failed to load ancestors", error: String(error) });
     }
   });
 
   app.get("/v1/graph/descendants/:wordId", async (req, res) => {
-    const validation = validateGraphRequest(req.params.wordId, req.query.depth);
+    const validation = validateGraphDepth(req.query.depth);
     if (!validation.ok) {
       return res.status(400).json({ message: validation.message });
     }
 
     try {
+      const resolvedWordId = await resolveWordIdFromParam(req.params.wordId);
+      if (!resolvedWordId) {
+        return res.status(404).json({ message: "Word not found" });
+      }
       const depth = validation.depth;
-      const edges = await graphRepository.findDescendants(req.params.wordId, depth);
-      res.status(200).json({ wordId: req.params.wordId, depth, edges });
+      const edges = await graphRepository.findDescendants(resolvedWordId, depth);
+      res.status(200).json({ wordId: resolvedWordId, depth, edges });
     } catch (error) {
       res.status(500).json({ message: "Failed to load descendants", error: String(error) });
     }
   });
 
   app.get("/v1/graph/borrowings/:wordId", async (req, res) => {
-    const validation = validateGraphRequest(req.params.wordId, req.query.depth);
+    const validation = validateGraphDepth(req.query.depth);
     if (!validation.ok) {
       return res.status(400).json({ message: validation.message });
     }
 
     try {
+      const resolvedWordId = await resolveWordIdFromParam(req.params.wordId);
+      if (!resolvedWordId) {
+        return res.status(404).json({ message: "Word not found" });
+      }
       const depth = validation.depth;
-      const edges = await graphRepository.findBorrowings(req.params.wordId, depth);
-      res.status(200).json({ wordId: req.params.wordId, depth, edges });
+      const edges = await graphRepository.findBorrowings(resolvedWordId, depth);
+      res.status(200).json({ wordId: resolvedWordId, depth, edges });
     } catch (error) {
       res.status(500).json({ message: "Failed to load borrowings", error: String(error) });
     }
   });
 
   app.get("/v1/graph/cognates/:wordId", async (req, res) => {
-    const validation = validateGraphRequest(req.params.wordId, req.query.depth);
+    const validation = validateGraphDepth(req.query.depth);
     if (!validation.ok) {
       return res.status(400).json({ message: validation.message });
     }
 
     try {
+      const resolvedWordId = await resolveWordIdFromParam(req.params.wordId);
+      if (!resolvedWordId) {
+        return res.status(404).json({ message: "Word not found" });
+      }
       const depth = validation.depth;
-      const edges = await graphRepository.findCognates(req.params.wordId, depth);
-      res.status(200).json({ wordId: req.params.wordId, depth, edges });
+      const edges = await graphRepository.findCognates(resolvedWordId, depth);
+      res.status(200).json({ wordId: resolvedWordId, depth, edges });
     } catch (error) {
       res.status(500).json({ message: "Failed to load cognates", error: String(error) });
     }

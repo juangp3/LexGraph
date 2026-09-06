@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS uq_edge_sources_edge_source_locator;

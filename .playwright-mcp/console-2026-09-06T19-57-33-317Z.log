@@ -1,0 +1,366 @@
+[    2531ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/auth:0
+[    2594ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[    2687ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[    2704ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[    2784ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[    2792ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[   25165ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   25229ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   25236ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   25273ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   55203ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   55291ms] [LOG] [Fast Refresh] done in 189ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   55366ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   55395ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   55451ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   67546ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   67549ms] [LOG] [Fast Refresh] done in 103ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   70414ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   70444ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   70482ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   70485ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[   70695ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[   70695ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  142668ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  143206ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  143209ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  143328ms] ReferenceError: updateOverlay is not defined
+    at GraphCanvasInner.useEffect (http://localhost:3000/_next/static/chunks/web_src_00sg1tq._.js?id=%255Bproject%255D%252Fweb%252Fsrc%252Ffeatures%252Fgraph%252FGraphCanvas.tsx+%255Bapp-client%255D+%2528ecmascript%2529:762:58)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:15093:17)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:965:74)
+    at commitHookEffectListUnmount (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7280:166)
+    at commitHookPassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7293:60)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8889:46)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8903:610)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+[  143328ms] ReferenceError: updateOverlay is not defined
+    at GraphCanvasInner.useEffect (http://localhost:3000/_next/static/chunks/web_src_00sg1tq._.js?id=%255Bproject%255D%252Fweb%252Fsrc%252Ffeatures%252Fgraph%252FGraphCanvas.tsx+%255Bapp-client%255D+%2528ecmascript%2529:762:58)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:15093:17)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:965:74)
+    at commitHookEffectListUnmount (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7280:166)
+    at commitHookPassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7293:60)
+    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8957:21)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8874:17)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8893:17)
+    at flushPassiveEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9996:13)
+    at flushPendingEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9961:16)
+    at flushSpawnedWork (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9934:48)
+    at commitRoot (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9746:441)
+[  143321ms] [LOG] [Fast Refresh] done in 635ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  143361ms] Error: Rendered more hooks than during the previous render.
+    at updateWorkInProgressHook (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:4734:23)
+    at updateMemo (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:5409:20)
+    at Object.useMemo (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:15465:24)
+    at http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_0x9e1bc._.js:1742:36
+    at Router (http://localhost:3000/_next/static/chunks/0aq__next_dist_client_1wmznrf._.js:14390:59)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:15037:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:6081:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9555:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9449:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_0x9e1bc._.js:2647:64)
+[  143464ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  143605ms] [LOG] [Fast Refresh] done in 250ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  143785ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  143898ms] [LOG] [Fast Refresh] done in 215ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  151857ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  151978ms] [LOG] [Fast Refresh] done in 231ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  152080ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  152100ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  152128ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  152132ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[  152269ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  152269ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  152300ms] ReferenceError: updateOverlay is not defined
+    at GraphCanvasInner.useEffect (http://localhost:3000/_next/static/chunks/web_src_00sg1tq._.js:2144:58)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:15093:17)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:965:74)
+    at commitHookEffectListUnmount (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7280:166)
+    at commitHookPassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7293:60)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8889:46)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8903:610)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+[  152302ms] ReferenceError: updateOverlay is not defined
+    at GraphCanvasInner.useEffect (http://localhost:3000/_next/static/chunks/web_src_00sg1tq._.js:2144:58)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:15093:17)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:965:74)
+    at commitHookEffectListUnmount (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7280:166)
+    at commitHookPassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:7293:60)
+    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8957:21)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8874:17)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8888:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8906:17)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8880:106)
+    at commitPassiveUnmountOnFiber (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:8893:17)
+    at flushPassiveEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9996:13)
+    at flushPendingEffects (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9961:16)
+    at flushSpawnedWork (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9934:48)
+    at commitRoot (http://localhost:3000/_next/static/chunks/0aq__next_dist_compiled_react-dom_0-72scy._.js:9746:441)
+[  309717ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  310546ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  310561ms] [LOG] [Fast Refresh] done in 933ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  310663ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  311260ms] [LOG] [Fast Refresh] done in 697ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  311542ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  311595ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  311605ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  311769ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  311799ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[  312246ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  312251ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  334918ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  334946ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  334975ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  334984ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[  335183ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  335183ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  447562ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  447720ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  447723ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  447724ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  447725ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  447779ms] [LOG] [Fast Refresh] done in 251ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  447887ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  448042ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  448076ms] [LOG] [Fast Refresh] done in 296ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  448209ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  448217ms] [LOG] [Fast Refresh] done in 140ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  451442ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  451598ms] [LOG] [Fast Refresh] done in 256ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  451717ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  451750ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  451784ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  451794ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[  451969ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  451969ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587153ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587210ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587212ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587213ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587213ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587246ms] [LOG] [Fast Refresh] done in 152ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587372ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  587624ms] [LOG] [Fast Refresh] done in 362ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  591267ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  591361ms] [LOG] [Fast Refresh] done in 209ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  591461ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  591493ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  591540ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  591550ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[  591745ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[  591746ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1470256ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=ALXRqOpZcBC97b3stI016' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0aq__next_dist_client_1wmznrf._.js:13422
+[ 1473600ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=ALXRqOpZcBC97b3stI016' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0aq__next_dist_client_1wmznrf._.js:13422
+[ 1476965ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=ALXRqOpZcBC97b3stI016' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0aq__next_dist_client_1wmznrf._.js:13422
+[ 1480318ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=ALXRqOpZcBC97b3stI016' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0aq__next_dist_client_1wmznrf._.js:13422
+[ 1485307ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1486276ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1486306ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1486311ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1486345ms] [LOG] [LexGraph] Production mode: MSW disabled, using live backend only @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1486364ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/v1/me:0
+[ 1486599ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1486600ms] [WARNING] [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002 @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1782883ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1784150ms] [LOG] [Fast Refresh] done in 1378ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1784222ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1784378ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1784409ms] [LOG] [Fast Refresh] done in 135ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1859787ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1859892ms] [LOG] [Fast Refresh] done in 211ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1914344ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1915547ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1915592ms] [LOG] [Fast Refresh] done in 1159ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1921836ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1922083ms] [LOG] [Fast Refresh] done in 350ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1922186ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1922214ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1922443ms] [LOG] [Fast Refresh] done in 358ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1922551ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1922629ms] [LOG] [Fast Refresh] done in 179ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1946328ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 1946429ms] [LOG] [Fast Refresh] done in 211ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2016137ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2016305ms] [LOG] [Fast Refresh] done in 269ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2016419ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2016452ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2016591ms] [LOG] [Fast Refresh] done in 284ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2016777ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2016873ms] [LOG] [Fast Refresh] done in 196ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2048296ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2048370ms] [LOG] [Fast Refresh] done in 187ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2105791ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2106164ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2106214ms] [LOG] [Fast Refresh] done in 163ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2108084ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2108186ms] [LOG] [Fast Refresh] done in 208ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2111020ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2111022ms] [LOG] [Fast Refresh] done in 116ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2116516ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2116575ms] [LOG] [Fast Refresh] done in 162ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2116986ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2117125ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2141024ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477
+[ 2141040ms] [LOG] [Fast Refresh] done in 120ms @ http://localhost:3000/_next/static/chunks/0aq__next_dist_0maxcm2._.js:2477

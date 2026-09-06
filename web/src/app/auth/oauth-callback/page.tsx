@@ -3,19 +3,18 @@
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession } from "@/features/auth/auth-session";
-import { fetchMe } from "@/features/auth/auth.service";
 
 function OAuthCallbackContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const { registerAndSignIn, signIn } = useAuthSession();
+  const { refreshMe } = useAuthSession();
 
   useEffect(() => {
     const run = async () => {
       const next = params.get("next") ?? "/workspace";
       try {
-        // server should have set cookie; fetch current user
-        await fetchMe();
+        // server should have set cookie or token; refresh session from context
+        await refreshMe();
       } catch {
         // ignore
       }
@@ -25,7 +24,7 @@ function OAuthCallbackContent() {
     };
 
     void run();
-  }, [params, router, registerAndSignIn, signIn]);
+  }, [params, router, refreshMe]);
 
   return <div className="p-8">Signing you in...</div>;
 }
